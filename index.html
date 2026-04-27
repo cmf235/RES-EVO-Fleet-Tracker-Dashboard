@@ -896,12 +896,16 @@ function renderGantt() {
 // ============================================================
 //  FLEET DETAIL PANELS
 // ============================================================
-function svcRow(label, isBooked) {
+function svcRow(label, isBooked, qtyStr) {
   const icon  = isBooked ? '\u2705' : '\u2B1C';
   const style = isBooked ? 'color:var(--text)' : 'color:var(--text-secondary)';
-  return '<div class="detail-row" style="padding:9px 18px">'
+  const qtyHtml = (isBooked && qtyStr)
+    ? '<span style="margin-left:auto;font-size:11px;font-weight:700;letter-spacing:0.06em;color:var(--text-secondary)">' + qtyStr + '</span>'
+    : '';
+  return '<div class="detail-row" style="padding:9px 18px;align-items:center">'
     + '<span style="font-size:15px;margin-right:10px">' + icon + '</span>'
     + '<span style="' + style + ';font-size:13px">' + label + '</span>'
+    + qtyHtml
     + '</div>';
 }
 
@@ -942,17 +946,11 @@ function sideCard(side, label, cssClass) {
          + 'letter-spacing:0.07em;padding:8px 14px 4px;color:var(--text-secondary)">' + t + '</div>';
   }
 
-  // Roustabout shift row
+  // Roustabout shift rows (with TECHNICIANS count)
   var roust = side.roustabout || {};
-  var roustShiftParts = [];
-  if (roust.dayShift)   roustShiftParts.push('DAY SHIFT &#x2600;&#xFE0F;');
-  if (roust.nightShift) roustShiftParts.push('NIGHT SHIFT <span style="display:inline-block;filter:sepia(1)saturate(8)hue-rotate(195deg)">&#x1F319;</span>');
-  var roustShiftRow = roustShiftParts.length
-    ? '<div class="detail-row"><div class="detail-lbl">Shift</div>'
-      + '<div class="detail-val" style="font-weight:600;letter-spacing:0.03em;font-size:12px">'
-      + roustShiftParts.join('&ensp;&middot;&ensp;')
-      + '</div></div>'
-    : '';
+  var roustShiftRow = ''
+    + (roust.dayShift   ? svcRow('Day Shift &#x2600;&#xFE0F;', true, roust.dayQty   ? roust.dayQty   + ' TECHNICIANS' : '') : '')
+    + (roust.nightShift ? svcRow('Night Shift <span style="display:inline-block;filter:sepia(1)saturate(8)hue-rotate(195deg)">&#x1F319;</span>', true, roust.nightQty ? roust.nightQty + ' TECHNICIANS' : '') : '');
 
   var dateLabel = cssClass === 'rigdown' ? 'Rig Down Date' : 'Rig Up Date';
   return '<div class="section-card">'
@@ -971,9 +969,9 @@ function sideCard(side, label, cssClass) {
     + svcRow('Rig Mats / Barrier Wall', !!(side.rigMats))
     + svcRow('Pull Cables',             !!(side.pullCables))
     + sh('Logistics')
-    + svcRow('RES Load Transports',         !!(side.loadTransports))
-    + svcRow('RES Unload Transports',       !!(side.unloadTransports))
-    + svcRow('RES Provided Semi / Hotshot', !!(side.semiHotshot))
+    + svcRow('RES Load Transports',         !!(side.loadTransports), side.loadQty   ? side.loadQty   + ' TRUCKS' : '')
+    + svcRow('RES Unload Transports',       !!(side.unloadTransports), side.unloadQty ? side.unloadQty + ' TRUCKS' : '')
+    + svcRow('RES Provided Semi / Hotshot', !!(side.semiHotshot),      side.semiQty   ? side.semiQty   + ' TRUCKS' : '')
     + sh('Add On Services')
     + svcRow('Misc', !!(side.misc && side.misc.start))
     + (side.misc && side.misc.desc ? '<div class="detail-row"><div class="detail-lbl">Description</div><div class="detail-val" style="font-style:italic;color:var(--text-secondary);font-size:12px">' + esc(side.misc.desc) + '</div></div>' : '')
@@ -1067,31 +1065,4 @@ function loadDemoData() {
   document.getElementById('lastUpdated').innerHTML = '⚠️ DEMO MODE';
 }
 
-// ============================================================
-//  NAVIGATION
-// ============================================================
-function showPanel(id) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  const panel = document.getElementById('panel-'+id);
-  if (panel) panel.classList.add('active');
-  const tab = document.querySelector('[data-panel="'+id+'"]');
-  if (tab) { tab.classList.add('active'); tab.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); }
-  localStorage.setItem('evo-panel', id);
-}
-
-// ============================================================
-//  DARK MODE
-// ============================================================
-function toggleDark() {
-  const curr = document.documentElement.getAttribute('data-theme');
-  applyTheme(curr==='dark'?'light':'dark');
-}
-function applyTheme(t) {
-  document.documentElement.setAttribute('data-theme', t);
-  document.getElementById('themeBtn').textContent = t==='dark' ? '☀️ Light' : '🌙 Dark';
-  localStorage.setItem('evo-theme', t);
-}
-</script>
-</body>
-</html>
+// ======================================================
