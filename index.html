@@ -966,7 +966,7 @@ function sideCard(side, label, cssClass) {
     + svcRow('Misc', !!(side.misc && side.misc.start))
     + (side.misc && side.misc.start ? dRangeRow('Misc Dates', side.misc) : '')
     + sh('Roustabout Crew')
-    + dRangeRow('Dates', side.roustabout)
+    + dRangeRow('Roustabout Dates', side.roustabout)
     + '</div>';
 }
 
@@ -1000,9 +1000,12 @@ function dRangeRow(label, rangeObj) {
   if (!rangeObj||!rangeObj.start) return `<div class="detail-row"><div class="detail-lbl">${label}</div><div class="detail-val empty">—</div></div>`;
   const display = fmtRange(rangeObj.start, rangeObj.end);
   const c = chip(rangeObj.start, rangeObj.end);
+  const t = rangeObj.startTime
+    ? '&ensp;<span style="color:var(--text-secondary);font-size:12px">&#x23F0;&thinsp;' + esc(rangeObj.startTime) + '</span>'
+    : '';
   return `<div class="detail-row">
     <div class="detail-lbl">${label}</div>
-    <div class="detail-val">${esc(display||rangeObj.start)} ${c}</div>
+    <div class="detail-val">${esc(display||rangeObj.start)}${t} ${c}</div>
   </div>`;
 }
 
