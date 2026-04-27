@@ -1065,7 +1065,20 @@ function loadDemoData() {
   document.getElementById('lastUpdated').innerHTML = '⚠️ DEMO MODE';
 }
 
-// ======================================================// ============================================================
+// ============================================================
+//  PANEL / TAB SWITCHING
+// ============================================================
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  const panel = document.getElementById('panel-'+id);
+  if (panel) panel.classList.add('active');
+  const tab = document.querySelector('[data-panel="'+id+'"]');
+  if (tab) { tab.classList.add('active'); tab.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); }
+  localStorage.setItem('evo-panel', id);
+}
+
+// ============================================================
 //  DARK MODE
 // ============================================================
 function toggleDark() {
