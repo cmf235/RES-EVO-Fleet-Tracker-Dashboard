@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RES · EVO Fleet Tracker Dashboard</title>
+  <style>
+    /* ===== THEME VARIABLES ===== */
+    :root {
+      --bg: #f4f6f9;
+      --surface: #ffffff;
+      --surface2: #f0f2f5;
+      --border: #e0e3e8;
+      --text: #1a1d23;
+      --text-secondary: #6b7280;
+      --primary: #1565C0;
+      --primary-light: #e3f2fd;
+      --header-bg: #0d2137;
+      --header-text: #ffffff;
+      --nav-bg: #163c5e;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+      --radius: 10px;
+      --rigdown: #C62828;
+      --rigdown-bg: #FFEBEE;
+      --rigdown-log: #E57373;
+      --rigup: #1B5E20;
+      --rigup-bg: #E8F5E9;
+      --rigup-log: #66BB6A;
+      --roustabout: #7B1FA2;
+      --roustabout-bg: #F3E5F5;
+      --misc: #E65100;
+      --misc-bg: #FFF3E0;
+    }
+    [data-theme="dark"] {
+      --bg: #0f1117;
+      --surface: #1a1d24;
+      --surface2: #22262f;
+      --border: #2e3340;
+      --text: #e2e8f0;
+      --text-secondary: #8892a4;
+      --primary: #60a5fa;
+      --primary-light: #1e2d42;
+      --header-bg: #080c14;
+      --header-text: #e2e8f0;
+      --nav-bg: #10182a;
+      --shadow: 0 1px 3px rgba(0,0,0,0.4);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.5);
+      --rigdown-bg: #2d1010;
+      --rigup-bg: #0d1f0d;
+      --roustabout-bg: #1f0d2e;
+      --misc-bg: #2a1a00;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0 20px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .header-logo { font-size: 26px; line-height: 1; }
+    .header-title h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+    .header-title p { font-size: 10px; opacity: 0.65; letter-spacing: 0.3px; margin-top: 1px; }
+    .header-right { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
+    .last-updated { font-size: 10px; opacity: 0.7; text-align: right; white-space: nowrap; max-width: 140px; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 13px; border: none; border-radius: 20px;
+      cursor: pointer; font-size: 12px; font-weight: 600;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .btn-icon { background: rgba(255,255,255,0.12); color: var(--header-text); border: 1px solid rgba(255,255,255,0.18); }
+    .btn-icon:hover { background: rgba(255,255,255,0.22); }
+    .btn-refresh.spinning .spin-icon { animation: spin 0.7s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== NAV ===== */
+    .nav {
+      background: var(--nav-bg);
+      display: flex;
+      overflow-x: auto;
+      scrollbar-width: none;
+      position: sticky;
+      top: 58px;
+      z-index: 150;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .nav::-webkit-scrollbar { display: none; }
+    .nav-tab {
+      display: flex; align-items: center; gap: 6px;
+      padding: 11px 16px;
+      color: rgba(255,255,255,0.6);
+      font-size: 12.5px; font-weight: 500;
+      white-space: nowrap; cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.15s; user-select: none;
+    }
+    .nav-tab:hover { color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.06); }
+    .nav-tab.active { color: #ffffff; border-bottom-color: #60a5fa; background: rgba(255,255,255,0.1); }
+    .nav-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ===== MAIN ===== */
+    .main { padding: 20px; max-width: 1440px; margin: 0 auto; }
+    .panel { display: none; }
+    .panel.active { display: block; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ===== STATUS BAR ===== */
+    .status-bar {
+      display: none; align-items: center; gap: 10px;
+      padding: 12px 16px; border-radius: var(--radius);
+      margin-bottom: 16px; font-size: 13px;
+      background: var(--surface); border: 1px solid var(--border);
+    }
+    .status-bar.show { display: flex; }
+    .status-bar.loading { border-color: #3b82f6; }
+    .status-bar.error { border-color: #ef4444; background: #fef2f2; color: #991b1b; }
+    [data-theme="dark"] .status-bar.error { background: #2d1010; color: #fca5a5; }
+    .status-bar.warning { border-color: #f59e0b; background: #fffbeb; color: #78350f; }
+    [data-theme="dark"] .status-bar.warning { background: #2a1f00; color: #fcd34d; }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+    }
+
+    /* ===== STATS ROW ===== */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .stat-num { font-size: 30px; font-weight: 800; line-height: 1; }
+    .stat-lbl { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-secondary); margin-top: 4px; }
+
+    /* ===== CONFLICT BANNER ===== */
+    .conflict-banner {
+      display: none;
+      background: #fff1f2;
+      border: 2px solid #f87171;
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 18px;
+    }
+    .conflict-banner.show { display: block; }
+    .conflict-title { font-weight: 700; color: #b91c1c; font-size: 14px; margin-bottom: 8px; }
+    .conflict-item { font-size: 13px; padding: 3px 0 3px 18px; position: relative; }
+    .conflict-item::before { content: '⚠️'; position: absolute; left: 0; font-size: 11px; top: 4px; }
+    [data-theme="dark"] .conflict-banner { background: #2d0e0e; border-color: #f87171; }
+    [data-theme="dark"] .conflict-title { color: #fca5a5; }
+
+    /* ===== SUMMARY CARD ===== */
+    .summary-card-header {
+      padding: 13px 16px;
+      display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .fleet-badge {
+      width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 15px; color: #fff; flex-shrink: 0;
+    }
+    .summary-card-title { font-weight: 700; font-size: 14px; }
+    .summary-card-sub { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+    .summary-card-body { padding: 6px 16px 12px; }
+
+    /* ===== EVENT ROWS ===== */
+    .event-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 0; border-bottom: 1px solid var(--border);
+    }
+    .event-row:last-child { border-bottom: none; }
+    .ev-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .ev-label { font-size: 11px; color: var(--text-secondary); min-width: 90px; }
+    .ev-value { font-size: 12px; font-weight: 500; flex: 1; }
+    .ev-chip { margin-left: auto; flex-shrink: 0; }
+
+    /* ===== CHIPS ===== */
+    .chip {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 2px 7px; border-radius: 10px;
+      font-size: 10px; font-weight: 700; white-space: nowrap;
+    }
+    .chip-active  { background: #ede9fe; color: #5b21b6; }
+    .chip-today   { background: #dcfce7; color: #15803d; }
+    .chip-soon    { background: #fef9c3; color: #a16207; }
+    .chip-future  { background: #dbeafe; color: #1d4ed8; }
+    .chip-past    { background: var(--surface2); color: var(--text-secondary); border: 1px solid var(--border); }
+    [data-theme="dark"] .chip-active  { background: #2e1065; color: #c4b5fd; }
+    [data-theme="dark"] .chip-today   { background: #052e16; color: #86efac; }
+    [data-theme="dark"] .chip-soon    { background: #1c1200; color: #fde68a; }
+    [data-theme="dark"] .chip-future  { background: #0c1e3c; color: #93c5fd; }
+
+    /* ===== LEGEND ===== */
+    .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-secondary); }
+    .legend-dot { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+
+    /* ===== CALENDAR ===== */
+    .cal-controls { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .cal-nav-btn {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      width: 32px; height: 32px; cursor: pointer; font-size: 18px; color: var(--text);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cal-nav-btn:hover { background: var(--surface2); }
+    .cal-month-lbl { font-size: 17px; font-weight: 700; min-width: 210px; text-align: center; }
+    .cal-today-btn {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      padding: 5px 12px; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text); margin-left: auto;
+    }
+    .cal-today-btn:hover { background: var(--surface2); }
+
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 1px; background: var(--border);
+      border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+    }
+    .cal-dow { background: var(--nav-bg); color: rgba(255,255,255,0.9); text-align: center; padding: 8px 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
+    .cal-cell {
+      background: var(--surface); min-height: 88px; padding: 5px 4px;
+      position: relative; overflow: hidden;
+    }
+    .cal-cell.other-month { background: var(--surface2); }
+    .cal-cell.other-month .cal-day-num { opacity: 0.35; }
+    .cal-cell.cal-today { background: var(--primary-light); }
+    .cal-day-num {
+      font-size: 11px; font-weight: 600; width: 20px; height: 20px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; margin-bottom: 3px;
+    }
+    .cal-cell.cal-today .cal-day-num { background: var(--primary); color: #fff; }
+    .cal-ev {
+      font-size: 9.5px; padding: 1px 4px 1px 5px;
+      border-radius: 3px; margin-bottom: 2px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      color: #fff; font-weight: 600; cursor: default;
+      border-left: 3px solid rgba(0,0,0,0.2);
+    }
+
+    /* ===== GANTT ===== */
+    .gantt-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+    .gantt-inner { min-width: 900px; }
+    .gantt-hdr { display: flex; background: var(--nav-bg); border-bottom: 2px solid var(--border); }
+    .gantt-lbl-col { width: 190px; min-width: 190px; flex-shrink: 0; padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,0.7); border-right: 1px solid rgba(255,255,255,0.15); }
+    .gantt-months { flex: 1; display: flex; overflow: hidden; }
+    .gantt-month-lbl { color: rgba(255,255,255,0.85); font-size: 11px; font-weight: 700; padding: 10px 8px; border-right: 1px solid rgba(255,255,255,0.15); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; flex-shrink: 0; }
+    .gantt-rows { }
+    .gantt-row { display: flex; border-bottom: 1px solid var(--border); }
+    .gantt-row:hover { background: var(--surface2); }
+    .gantt-row-lbl {
+      width: 190px; min-width: 190px; flex-shrink: 0;
+      padding: 7px 14px; font-size: 12px;
+      border-right: 1px solid var(--border);
+      display: flex; align-items: center; gap: 6px;
+      background: var(--surface);
+    }
+    .gantt-row-lbl.fleet-hdr { background: var(--surface2); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-secondary); }
+    .gantt-track { flex: 1; position: relative; height: 34px; background: var(--surface); overflow: visible; }
+    .gantt-row.fleet-hdr-row .gantt-track { background: var(--surface2); }
+    .gantt-bar {
+      position: absolute; top: 5px; height: 24px; border-radius: 4px;
+      display: flex; align-items: center; padding: 0 6px;
+      font-size: 9.5px; font-weight: 700; color: #fff;
+      white-space: nowrap; overflow: hidden; cursor: default;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .gantt-today-line {
+      position: absolute; top: 0; bottom: 0; width: 2px;
+      background: #ef4444; z-index: 20; pointer-events: none;
+    }
+    .gantt-today-line::before { content: '▼'; position: absolute; top: -8px; left: -5px; font-size: 10px; color: #ef4444; }
+
+    /* ===== FLEET DETAIL ===== */
+    .fleet-page-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 20px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 20px;
+      box-shadow: var(--shadow);
+    }
+    .fleet-badge-lg {
+      width: 56px; height: 56px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 22px; color: #fff; flex-shrink: 0;
+    }
+    .fleet-page-title { font-size: 22px; font-weight: 800; }
+    .fleet-page-sub { color: var(--text-secondary); font-size: 13px; margin-top: 2px; }
+    .fleet-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 780px) { .fleet-detail-grid { grid-template-columns: 1fr; } }
+
+    .section-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    .sc-header {
+      padding: 14px 18px; display: flex; align-items: center; gap: 10px;
+      font-weight: 700; font-size: 15px; border-bottom: 2px solid;
+    }
+    .sc-header.rigdown { background: var(--rigdown-bg); border-bottom-color: var(--rigdown); color: var(--rigdown); }
+    .sc-header.rigup   { background: var(--rigup-bg);   border-bottom-color: var(--rigup);   color: var(--rigup); }
+
+    .detail-row { display: flex; align-items: flex-start; padding: 11px 18px; border-bottom: 1px solid var(--border); }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-lbl { min-width: 140px; font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.4px; padding-top: 2px; }
+    .detail-val { flex: 1; font-size: 14px; font-weight: 500; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+    .detail-val.empty { color: var(--text-secondary); font-style: italic; font-weight: 400; font-size: 13px; }
+
+    .sub-header { padding: 8px 18px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-secondary); background: var(--surface2); border-bottom: 1px solid var(--border); }
+
+    /* ===== NO DATA ===== */
+    .no-data { text-align: center; padding: 48px 20px; color: var(--text-secondary); }
+    .no-data-icon { font-size: 40px; margin-bottom: 10px; }
+    .no-data p { font-size: 14px; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 640px) {
+      .header { height: auto; padding: 10px 14px; flex-wrap: wrap; gap: 8px; }
+      .nav { top: 0; position: relative; }
+      .main { padding: 12px; }
+      .cards-grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .last-updated { display: none; }
+      .cal-month-lbl { min-width: 160px; font-size: 14px; }
+    }
+
+    /* ===== PRINT ===== */
+    @media print {
+      .header, .nav { position: relative; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .btn, .cal-controls button { display: none; }
+      .panel { display: block !important; page-break-before: always; }
+      .panel:first-of-type { page-break-before: auto; }
+      .gantt-wrap { overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="header">
+  <div class="header-left">
+    <div class="header-logo">🛢️</div>
+    <div class="header-title">
+      <h1>RES · EVO Fleet Tracker</h1>
+      <p>LIVE DASHBOARD &nbsp;·&nbsp; AUTO-REFRESH EVERY 5 MIN</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="last-updated" id="lastUpdated">—</div>
+    <button class="btn btn-icon btn-refresh" id="refreshBtn" onclick="refreshData()">
+      <span class="spin-icon">↻</span> Refresh
+    </button>
+    <button class="btn btn-icon" onclick="window.print()">🖨️ Print</button>
+    <button class="btn btn-icon" id="themeBtn" onclick="toggleDark()">🌙 Dark</button>
+  </div>
+</header>
+
+<!-- ===== NAV ===== -->
+<nav class="nav" id="mainNav">
+  <div class="nav-tab active" data-panel="summary"  onclick="showPanel('summary')">📊 Weekly Summary</div>
+  <div class="nav-tab"        data-panel="calendar" onclick="showPanel('calendar')">📅 Calendar</div>
+  <div class="nav-tab"        data-panel="gantt"    onclick="showPanel('gantt')">📈 Gantt Timeline</div>
+  <div class="nav-tab"        data-panel="fleet-1"  onclick="showPanel('fleet-1')"><span class="nav-dot" style="background:#1565C0"></span>Fleet #1</div>
+  <div class="nav-tab"        data-panel="fleet-6"  onclick="showPanel('fleet-6')"><span class="nav-dot" style="background:#2E7D32"></span>Fleet #6</div>
+  <div class="nav-tab"        data-panel="fleet-9"  onclick="showPanel('fleet-9')"><span class="nav-dot" style="background:#6A1B9A"></span>Fleet #9</div>
+  <div class="nav-tab"        data-panel="fleet-10" onclick="showPanel('fleet-10')"><span class="nav-dot" style="background:#E65100"></span>Fleet #10</div>
+  <div class="nav-tab"        data-panel="fleet-13" onclick="showPanel('fleet-13')"><span class="nav-dot" style="background:#00695C"></span>Fleet #13</div>
+  <div class="nav-tab"        data-panel="fleet-15" onclick="showPanel('fleet-15')"><span class="nav-dot" style="background:#AD1457"></span>Fleet #15</div>
+</nav>
+
+<!-- ===== MAIN ===== -->
+<main class="main">
+  <div class="status-bar" id="statusBar"></div>
+
+  <!-- SUMMARY -->
+  <div class="panel active" id="panel-summary">
+    <div class="conflict-banner" id="conflictBanner"></div>
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card"><div class="stat-num" style="color:#1B5E20">—</div><div class="stat-lbl">Active Now</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:#E65100">—</div><div class="stat-lbl">Within 7 Days</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:#1565C0">6</div><div class="stat-lbl">Fleets</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:#6b7280">—</div><div class="stat-lbl">Total Events</div></div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#C62828"></div>Rig Down</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#E57373"></div>RD Logistics</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#1B5E20"></div>Rig Up</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#66BB6A"></div>RU Logistics</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#7B1FA2"></div>Roustabout</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#E65100"></div>Misc Services</div>
+    </div>
+    <div class="cards-grid" id="summaryCards">
+      <div class="no-data" style="grid-column:1/-1"><div class="no-data-icon">📡</div><p>Connecting to live data…</p></div>
+    </div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="panel" id="panel-calendar">
+    <div class="cal-controls">
+      <button class="cal-nav-btn" onclick="calNav(-1)">‹</button>
+      <div class="cal-month-lbl" id="calMonthLbl">—</div>
+      <button class="cal-nav-btn" onclick="calNav(1)">›</button>
+      <button class="cal-today-btn" onclick="calNav(0)">Today</button>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#C62828"></div>Rig Down</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#E57373"></div>RD Logistics</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#1B5E20"></div>Rig Up</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#66BB6A"></div>RU Logistics</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#7B1FA2"></div>Roustabout</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#E65100"></div>Misc</div>
+    </div>
+    <div class="card">
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+  </div>
+
+  <!-- GANTT -->
+  <div class="panel" id="panel-gantt">
+    <div class="gantt-wrap">
+      <div class="gantt-inner" id="ganttInner">
+        <div class="no-data"><div class="no-data-icon">📈</div><p>Loading Gantt data…</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLEET PANELS -->
+  <div class="panel" id="panel-fleet-1"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
+  <div class="panel" id="panel-fleet-6"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
+  <div class="panel" id="panel-fleet-9"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
+  <div class="panel" id="panel-fleet-10"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
+  <div class="panel" id="panel-fleet-13"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
+  <div class="panel" id="panel-fleet-15"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
+</main>
+
+<script>
+// ============================================================
+//  CONFIG — Replace with your deployed Apps Script Web App URL
+// ============================================================
+const API_URL = 'https://script.google.com/macros/s/AKfycbxzRn4DcbgvNJm432aNPTYE91QWNlrA79s8KG_aMtgYTtbFRqh57l76l8fH_QMWHCqMUg/exec';
+
+// ============================================================
+//  CONSTANTS
+// ============================================================
+const FLEET_COLORS = {
+  '1':'#1565C0','6':'#2E7D32','9':'#6A1B9A',
+  '10':'#E65100','13':'#00695C','15':'#AD1457'
+};
+const EV_COLORS = {
+  rigdown:'#C62828', rigdown_log:'#E57373',
+  rigup:'#1B5E20',   rigup_log:'#66BB6A',
+  roustabout:'#7B1FA2', misc:'#E65100'
+};
+const MONTH_NAMES = ['January','February','March','April','May','June',
+                     'July','August','September','October','November','December'];
+const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+let appData = null;
+let calYear, calMonth;
+
+// ============================================================
+//  INIT
+// ============================================================
+(function init() {
+  const now = new Date();
+  calYear  = now.getFullYear();
+  calMonth = now.getMonth();
+
+  // Restore theme
+  const theme = localStorage.getItem('evo-theme') || 'light';
+  applyTheme(theme);
+
+  // Restore last panel
+  const panel = localStorage.getItem('evo-panel') || 'summary';
+  showPanel(panel);
+
+  refreshData();
+  setInterval(refreshData, 5 * 60 * 1000);
+})();
+
+// ============================================================
+//  DATA
+// ============================================================
+function refreshData() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+
+  if (API_URL === 'PASTE_APPS_SCRIPT_URL_HERE') {
+    setStatus('warning', '⚠️ Dashboard running in DEMO MODE — API_URL not yet configured. Real data will appear after the Apps Script Web App is deployed and the URL is pasted in.');
+    loadDemoData();
+    btn.classList.remove('spinning');
+    return;
+  }
+
+  setStatus('loading', '⏳ Fetching live data from Google Sheets…');
+  fetch(API_URL)
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(data => {
+      if (data.error) throw new Error(data.error);
+      appData = data;
+      clearStatus();
+      renderAll();
+      const ts = new Date(data.lastUpdated);
+      document.getElementById('lastUpdated').innerHTML =
+        'Updated ' + ts.toLocaleDateString('en-US',{month:'short',day:'numeric'}) +
+        ' ' + ts.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    })
+    .catch(err => setStatus('error', '❌ ' + err.message + ' — check API_URL in the HTML file.'))
+    .finally(() => btn.classList.remove('spinning'));
+}
+
+function setStatus(type, msg) {
+  const bar = document.getElementById('statusBar');
+  bar.className = 'status-bar show ' + type;
+  bar.textContent = msg;
+}
+function clearStatus() {
+  document.getElementById('statusBar').className = 'status-bar';
+}
+
+// ============================================================
+//  RENDER ALL
+// ============================================================
+function renderAll() {
+  if (!appData) return;
+  renderSummary();
+  renderCalendar();
+  renderGantt();
+  renderFleetPanels();
+}
+
+// ============================================================
+//  DATE HELPERS
+// ============================================================
+function parseDate(s) {
+  if (!s) return null;
+  const d = new Date(s + 'T12:00:00');
+  return isNaN(d) ? null : d;
+}
+function fmt(s) {
+  const d = parseDate(s);
+  if (!d) return null;
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+function fmtRange(s, e) {
+  if (!s) return null;
+  if (!e || s === e) return fmt(s);
+  return fmt(s) + ' – ' + fmt(e);
+}
+function todayISO() {
+  const n = new Date();
+  return n.getFullYear()+'-'+pad2(n.getMonth()+1)+'-'+pad2(n.getDate());
+}
+function pad2(n) { return String(n).padStart(2,'0'); }
+function diffDays(dateStr) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = parseDate(dateStr); if (!d) return null;
+  d.setHours(0,0,0,0);
+  return Math.round((d - today) / 86400000);
+}
+function chip(start, end) {
+  if (!start) return '';
+  const today = todayISO();
+  const isSpan = end && end !== start;
+  if (isSpan && start <= today && end >= today) return '<span class="chip chip-active">● Active</span>';
+  const diff = diffDays(start);
+  if (diff === null) return '';
+  if (diff === 0)                       return '<span class="chip chip-today">✓ Today</span>';
+  if (diff > 0 && diff <= 3)            return '<span class="chip chip-soon">⚡ ' + diff + 'd</span>';
+  if (diff > 0 && diff <= 14)           return '<span class="chip chip-future">↗ In ' + diff + 'd</span>';
+  if (diff > 0)                         return '<span class="chip chip-future">📅 In ' + diff + 'd</span>';
+  if (!end || end < today)              return '<span class="chip chip-past">' + Math.abs(diff) + 'd ago</span>';
+  return '';
+}
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ============================================================
+//  COLLECT EVENTS from a fleet object
+// ============================================================
+function collectEvents(f) {
+  const ev = [];
+  const rd = f.rigDown, ru = f.rigUp;
+  if (rd.date)           ev.push({type:'rigdown',     label:'Rig Down',      start:rd.date, end:rd.date});
+  if (rd.logisticsDate)  ev.push({type:'rigdown_log', label:'RD Logistics',  start:rd.logisticsDate, end:rd.logisticsDate});
+  if (rd.roustabout&&rd.roustabout.start) ev.push({type:'roustabout', label:'RD Roustabout', start:rd.roustabout.start, end:rd.roustabout.end||rd.roustabout.start});
+  if (rd.misc&&rd.misc.start)             ev.push({type:'misc',       label:'RD Misc',        start:rd.misc.start,       end:rd.misc.end||rd.misc.start});
+  if (ru.date)           ev.push({type:'rigup',       label:'Rig Up',        start:ru.date, end:ru.date});
+  if (ru.logisticsDate)  ev.push({type:'rigup_log',   label:'RU Logistics',  start:ru.logisticsDate, end:ru.logisticsDate});
+  if (ru.roustabout&&ru.roustabout.start) ev.push({type:'roustabout', label:'RU Roustabout', start:ru.roustabout.start, end:ru.roustabout.end||ru.roustabout.start});
+  if (ru.misc&&ru.misc.start)             ev.push({type:'misc',       label:'RU Misc',        start:ru.misc.start,       end:ru.misc.end||ru.misc.start});
+  return ev;
+}
+
+// ============================================================
+//  SUMMARY TAB
+// ============================================================
+function renderSummary() {
+  const today = todayISO();
+  let active=0, soon=0, total=0;
+  const allEv = [];
+
+  appData.fleets.forEach(f => {
+    collectEvents(f).forEach(e => {
+      total++;
+      const end = e.end || e.start;
+      if (e.start <= today && end >= today) active++;
+      else { const d = diffDays(e.start); if (d !== null && d > 0 && d <= 7) soon++; }
+      allEv.push({...e, fleetNum:f.num, shortName:f.shortName});
+    });
+  });
+
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card"><div class="stat-num" style="color:#1B5E20">${active}</div><div class="stat-lbl">Active Now</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#E65100">${soon}</div><div class="stat-lbl">Within 7 Days</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#1565C0">${appData.fleets.length}</div><div class="stat-lbl">Fleets</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#6b7280">${total}</div><div class="stat-lbl">Total Events</div></div>`;
+
+  // Conflicts
+  const conflicts = detectConflicts(allEv);
+  const cb = document.getElementById('conflictBanner');
+  if (conflicts.length) {
+    cb.innerHTML = '<div class="conflict-title">⚠️ Schedule Conflicts Detected (' + conflicts.length + ')</div>' +
+      conflicts.map(c => '<div class="conflict-item">'+esc(c)+'</div>').join('');
+    cb.classList.add('show');
+  } else {
+    cb.classList.remove('show');
+  }
+
+  document.getElementById('summaryCards').innerHTML =
+    appData.fleets.map(f => summaryCard(f)).join('') ||
+    '<div class="no-data" style="grid-column:1/-1"><div class="no-data-icon">📭</div><p>No fleet data.</p></div>';
+}
+
+function detectConflicts(allEv) {
+  const out = [];
+  // Same-date rig events across different fleets
+  const rigs = allEv.filter(e => e.type==='rigdown'||e.type==='rigup');
+  for (let i=0;i<rigs.length;i++) for (let j=i+1;j<rigs.length;j++) {
+    if (rigs[i].fleetNum===rigs[j].fleetNum) continue;
+    if (rigs[i].start===rigs[j].start)
+      out.push('Fleet #'+rigs[i].fleetNum+' ('+rigs[i].label+') and Fleet #'+rigs[j].fleetNum+' ('+rigs[j].label+') scheduled on '+fmt(rigs[i].start));
+  }
+  // Roustabout overlaps
+  const roust = allEv.filter(e => e.type==='roustabout');
+  for (let i=0;i<roust.length;i++) for (let j=i+1;j<roust.length;j++) {
+    if (roust[i].fleetNum===roust[j].fleetNum) continue;
+    const aS=roust[i].start, aE=roust[i].end||roust[i].start;
+    const bS=roust[j].start, bE=roust[j].end||roust[j].start;
+    const oS = aS>bS?aS:bS, oE = aE<bE?aE:bE;
+    if (oS<=oE) out.push('Fleet #'+roust[i].fleetNum+' + Fleet #'+roust[j].fleetNum+' roustabout crews overlap '+fmtRange(oS,oE));
+  }
+  return out;
+}
+
+function summaryCard(f) {
+  const color = FLEET_COLORS[f.num]||'#1565C0';
+  const rd=f.rigDown, ru=f.rigUp;
+  const loc = ru.location||rd.location||'';
+  const pad = ru.pad||rd.pad||'';
+  const subtitle = [loc,pad].filter(Boolean).join(' · ');
+
+  const rows = [
+    rd.date           && evRow('rigdown',     'Rig Down',      rd.date, null),
+    rd.logisticsDate  && evRow('rigdown_log', 'RD Logistics',  rd.logisticsDate, null),
+    rd.roustabout&&rd.roustabout.start && evRow('roustabout','RD Roustabout',rd.roustabout.start,rd.roustabout.end),
+    rd.misc&&rd.misc.start             && evRow('misc',       'RD Misc',        rd.misc.start,       rd.misc.end),
+    ru.date           && evRow('rigup',       'Rig Up',        ru.date, null),
+    ru.logisticsDate  && evRow('rigup_log',   'RU Logistics',  ru.logisticsDate, null),
+    ru.roustabout&&ru.roustabout.start && evRow('roustabout','RU Roustabout',ru.roustabout.start,ru.roustabout.end),
+    ru.misc&&ru.misc.start             && evRow('misc',       'RU Misc',        ru.misc.start,       ru.misc.end),
+  ].filter(Boolean).join('');
+
+  return `<div class="card" onclick="showPanel('fleet-${f.num}')" style="cursor:pointer;transition:box-shadow 0.15s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)'" onmouseout="this.style.boxShadow=''">
+    <div class="summary-card-header">
+      <div class="fleet-badge" style="background:${color}">${f.num}</div>
+      <div>
+        <div class="summary-card-title">${esc(f.shortName)}</div>
+        <div class="summary-card-sub">${esc(subtitle)||'No location set'}</div>
+      </div>
+      <div style="margin-left:auto;font-size:12px;color:var(--text-secondary)">View detail →</div>
+    </div>
+    <div class="summary-card-body">
+      ${rows||'<div style="padding:8px 0;color:var(--text-secondary);font-size:13px">No events scheduled</div>'}
+    </div>
+  </div>`;
+}
+
+function evRow(type, label, start, end) {
+  const color = EV_COLORS[type]||'#9E9E9E';
+  const dateStr = fmtRange(start, end);
+  if (!dateStr) return '';
+  return `<div class="event-row">
+    <div class="ev-dot" style="background:${color}"></div>
+    <div class="ev-label">${label}</div>
+    <div class="ev-value">${dateStr}</div>
+    <div class="ev-chip">${chip(start,end)}</div>
+  </div>`;
+}
+
+// ============================================================
+//  CALENDAR TAB
+// ============================================================
+function calNav(dir) {
+  if (dir === 0) { const n=new Date(); calYear=n.getFullYear(); calMonth=n.getMonth(); }
+  else { calMonth+=dir; if(calMonth>11){calMonth=0;calYear++;} if(calMonth<0){calMonth=11;calYear--;} }
+  renderCalendar();
+}
+
+function renderCalendar() {
+  document.getElementById('calMonthLbl').textContent = MONTH_NAMES[calMonth] + ' ' + calYear;
+
+  // Build date→events map
+  const evMap = {};
+  if (appData) {
+    appData.fleets.forEach(f => {
+      collectEvents(f).forEach(ev => {
+        if (!ev.start) return;
+        const s=parseDate(ev.start), e=parseDate(ev.end||ev.start);
+        if (!s) return;
+        let cur=new Date(s);
+        while (cur<=e) {
+          const k=cur.getFullYear()+'-'+pad2(cur.getMonth()+1)+'-'+pad2(cur.getDate());
+          if (!evMap[k]) evMap[k]=[];
+          evMap[k].push({...ev, fleetNum:f.num});
+          cur.setDate(cur.getDate()+1);
+        }
+      });
+    });
+  }
+
+  const today = todayISO();
+  const firstDow = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const daysInPrev  = new Date(calYear, calMonth, 0).getDate();
+
+  let html = DOW.map(d => `<div class="cal-dow">${d}</div>`).join('');
+
+  // Prev month padding
+  for (let i=0; i<firstDow; i++) {
+    html += `<div class="cal-cell other-month"><div class="cal-day-num">${daysInPrev-firstDow+i+1}</div></div>`;
+  }
+  // Days
+  for (let d=1; d<=daysInMonth; d++) {
+    const ds = calYear+'-'+pad2(calMonth+1)+'-'+pad2(d);
+    const isToday = ds===today;
+    const dayEvs = evMap[ds]||[];
+    const evHtml = dayEvs.slice(0,3).map(ev => {
+      const c = EV_COLORS[ev.type]||'#9E9E9E';
+      return `<div class="cal-ev" style="background:${c}" title="Fleet #${ev.fleetNum} · ${ev.label}">#${ev.fleetNum} ${ev.label}</div>`;
+    }).join('') + (dayEvs.length>3 ? `<div class="cal-ev" style="background:#6b7280">+${dayEvs.length-3} more</div>` : '');
+    html += `<div class="cal-cell${isToday?' cal-today':''}"><div class="cal-day-num">${d}</div>${evHtml}</div>`;
+  }
+  // Next month padding
+  const used = firstDow + daysInMonth;
+  const rem = used%7===0 ? 0 : 7-(used%7);
+  for (let i=1; i<=rem; i++) html += `<div class="cal-cell other-month"><div class="cal-day-num">${i}</div></div>`;
+
+  document.getElementById('calGrid').innerHTML = html;
+}
+
+// ============================================================
+//  GANTT TAB
+// ============================================================
+function renderGantt() {
+  if (!appData) return;
+
+  // Date range
+  let minDate=null, maxDate=null;
+  appData.fleets.forEach(f => collectEvents(f).forEach(ev => {
+    if (!ev.start) return;
+    if (!minDate||ev.start<minDate) minDate=ev.start;
+    const e=ev.end||ev.start;
+    if (!maxDate||e>maxDate) maxDate=e;
+  }));
+
+  if (!minDate) {
+    document.getElementById('ganttInner').innerHTML = '<div class="no-data"><div class="no-data-icon">📭</div><p>No events to display.</p></div>';
+    return;
+  }
+
+  const rangeStart = parseDate(minDate); rangeStart.setDate(rangeStart.getDate()-7);
+  const rangeEnd   = parseDate(maxDate); rangeEnd.setDate(rangeEnd.getDate()+7);
+  const totalDays  = Math.round((rangeEnd-rangeStart)/86400000)+1;
+
+  function pct(dateStr) {
+    const d=parseDate(dateStr); if (!d) return 0;
+    return Math.round((d-rangeStart)/86400000)/totalDays*100;
+  }
+  function wPct(s,e) {
+    const sd=parseDate(s), ed=parseDate(e||s); if(!sd||!ed) return 0.5;
+    return Math.max((Math.round((ed-sd)/86400000)+1)/totalDays*100, 0.4);
+  }
+
+  // Month header labels
+  let monthHtml='', cur=new Date(rangeStart);
+  while (cur<=rangeEnd) {
+    const mStart=new Date(cur.getFullYear(),cur.getMonth(),1);
+    const mEnd=new Date(cur.getFullYear(),cur.getMonth()+1,0);
+    const capS=cur>mStart?cur:mStart;
+    const capE=rangeEnd<mEnd?rangeEnd:mEnd;
+    const w=(Math.round((capE-capS)/86400000)+1)/totalDays*100;
+    monthHtml+=`<div class="gantt-month-lbl" style="width:${w}%;flex-shrink:0">${MONTH_SHORT[cur.getMonth()]} ${cur.getFullYear()}</div>`;
+    cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);
+  }
+
+  // Today line
+  const todayLeft=pct(todayISO());
+  const todayLine=`<div class="gantt-today-line" style="left:${todayLeft}%"></div>`;
+
+  // Event definitions
+  const EVDEFS = [
+    {key:'rigdown',     label:'Rig Down',      sF:f=>f.rigDown.date, eF:f=>f.rigDown.date},
+    {key:'rigdown_log', label:'RD Logistics',  sF:f=>f.rigDown.logisticsDate, eF:f=>f.rigDown.logisticsDate},
+    {key:'roustabout',  label:'RD Roustabout', sF:f=>f.rigDown.roustabout&&f.rigDown.roustabout.start, eF:f=>f.rigDown.roustabout&&f.rigDown.roustabout.end},
+    {key:'misc',        label:'RD Misc',       sF:f=>f.rigDown.misc&&f.rigDown.misc.start,       eF:f=>f.rigDown.misc&&f.rigDown.misc.end},
+    {key:'rigup',       label:'Rig Up',        sF:f=>f.rigUp.date, eF:f=>f.rigUp.date},
+    {key:'rigup_log',   label:'RU Logistics',  sF:f=>f.rigUp.logisticsDate, eF:f=>f.rigUp.logisticsDate},
+    {key:'roustabout2', label:'RU Roustabout', sF:f=>f.rigUp.roustabout&&f.rigUp.roustabout.start, eF:f=>f.rigUp.roustabout&&f.rigUp.roustabout.end, color:'#7B1FA2'},
+    {key:'misc2',       label:'RU Misc',       sF:f=>f.rigUp.misc&&f.rigUp.misc.start,       eF:f=>f.rigUp.misc&&f.rigUp.misc.end, color:'#E65100'},
+  ];
+
+  let rowsHtml='';
+  appData.fleets.forEach(f => {
+    const fc=FLEET_COLORS[f.num]||'#1565C0';
+    rowsHtml+=`<div class="gantt-row fleet-hdr-row">
+      <div class="gantt-row-lbl fleet-hdr" style="border-left:3px solid ${fc}">Fleet #${f.num} · ${esc(f.shortName)}</div>
+      <div class="gantt-track" style="background:var(--surface2)">${todayLine}</div>
+    </div>`;
+    EVDEFS.forEach(def => {
+      const s=def.sF(f), e=def.eF(f);
+      if (!s) return;
+      const color=def.color||EV_COLORS[def.key]||'#9E9E9E';
+      const l=pct(s), w=wPct(s,e||s);
+      const barLabel = w>6 ? def.label : '';
+      rowsHtml+=`<div class="gantt-row">
+        <div class="gantt-row-lbl" style="padding-left:24px;font-size:11px">${def.label}</div>
+        <div class="gantt-track">
+          ${todayLine}
+          <div class="gantt-bar" style="left:${l}%;width:${w}%;background:${color}" title="Fleet #${f.num}: ${def.label} | ${fmtRange(s,e)||s}">${barLabel}</div>
+        </div>
+      </div>`;
+    });
+  });
+
+  document.getElementById('ganttInner').innerHTML = `
+    <div class="gantt-hdr">
+      <div class="gantt-lbl-col">Fleet / Event</div>
+      <div class="gantt-months" style="flex:1;overflow:hidden">${monthHtml}</div>
+    </div>
+    <div class="gantt-rows">${rowsHtml}</div>`;
+}
+
+// ============================================================
+//  FLEET DETAIL PANELS
+// ============================================================
+function renderFleetPanels() {
+  appData.fleets.forEach(f => {
+    const el = document.getElementById('panel-fleet-'+f.num);
+    if (el) el.innerHTML = fleetPanel(f);
+  });
+}
+
+function fleetPanel(f) {
+  const color=FLEET_COLORS[f.num]||'#1565C0';
+  const rd=f.rigDown, ru=f.rigUp;
+  return `
+  <div class="fleet-page-header">
+    <div class="fleet-badge-lg" style="background:${color}">${f.num}</div>
+    <div>
+      <div class="fleet-page-title">${esc(f.name)}</div>
+      <div class="fleet-page-sub">Detailed schedule · Click any card to return to summary</div>
+    </div>
+  </div>
+  <div class="fleet-detail-grid">
+    <div class="section-card">
+      <div class="sc-header rigdown">🔴 &nbsp;Rig Down</div>
+      ${dRow('Location', rd.location)}
+      ${dRow('Pad', rd.pad)}
+      ${dRow('Rig Down Date', rd.date, null, true)}
+      ${dRow('Logistics Date', rd.logisticsDate, null, true)}
+      <div class="sub-header">Roustabout Crew</div>
+      ${dRangeRow('Dates', rd.roustabout)}
+      <div class="sub-header">Misc Services</div>
+      ${dRangeRow('Dates', rd.misc)}
+    </div>
+    <div class="section-card">
+      <div class="sc-header rigup">🟢 &nbsp;Rig Up</div>
+      ${dRow('Location', ru.location)}
+      ${dRow('Pad', ru.pad)}
+      ${dRow('Rig Up Date', ru.date, null, true)}
+      ${dRow('Logistics Date', ru.logisticsDate, null, true)}
+      <div class="sub-header">Roustabout Crew</div>
+      ${dRangeRow('Dates', ru.roustabout)}
+      <div class="sub-header">Misc Services</div>
+      ${dRangeRow('Dates', ru.misc)}
+    </div>
+  </div>`;
+}
+
+function dRow(label, value, end, isDate) {
+  let display = value;
+  let c = '';
+  if (isDate && value) { display = fmt(value)||value; c = chip(value, end); }
+  return `<div class="detail-row">
+    <div class="detail-lbl">${label}</div>
+    <div class="detail-val${!value?' empty':''}">
+      ${value ? esc(String(display)) : '—'}
+      ${c}
+    </div>
+  </div>`;
+}
+
+function dRangeRow(label, rangeObj) {
+  if (!rangeObj||!rangeObj.start) return `<div class="detail-row"><div class="detail-lbl">${label}</div><div class="detail-val empty">—</div></div>`;
+  const display = fmtRange(rangeObj.start, rangeObj.end);
+  const c = chip(rangeObj.start, rangeObj.end);
+  return `<div class="detail-row">
+    <div class="detail-lbl">${label}</div>
+    <div class="detail-val">${esc(display||rangeObj.start)} ${c}</div>
+  </div>`;
+}
+
+// ============================================================
+//  DEMO DATA
+// ============================================================
+function loadDemoData() {
+  function addDays(n) {
+    const d=new Date(); d.setDate(d.getDate()+n);
+    return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+  }
+  appData = { lastUpdated: new Date().toISOString(), fleets: [
+    { num:'1',  name:'FLEET # 1 - Lindsay Riley',  shortName:'Lindsay Riley',
+      rigDown:{ location:'Eagle Ford', pad:'Pad A-1', date:addDays(-2), logisticsDate:addDays(-5),
+                roustabout:{start:addDays(-1),end:addDays(1)}, misc:{start:addDays(-1),end:addDays(0)} },
+      rigUp:  { location:'Permian Basin', pad:'Pad B-3', date:addDays(5), logisticsDate:addDays(3),
+                roustabout:{start:addDays(4),end:addDays(7)}, misc:{start:addDays(4),end:addDays(5)} } },
+    { num:'6',  name:'FLEET # 6 - Brandon Dock',   shortName:'Brandon Dock',
+      rigDown:{ location:'Haynesville', pad:'Pad C-7', date:addDays(3), logisticsDate:addDays(1),
+                roustabout:{start:addDays(2),end:addDays(4)}, misc:{start:addDays(3),end:addDays(4)} },
+      rigUp:  { location:'Haynesville', pad:'Pad D-2', date:addDays(14), logisticsDate:addDays(12),
+                roustabout:{start:addDays(13),end:addDays(16)}, misc:{start:addDays(13),end:addDays(14)} } },
+    { num:'9',  name:'FLEET # 9 - Eric Cronberg',  shortName:'Eric Cronberg',
+      rigDown:{ location:'Marcellus', pad:'Pad E-5', date:addDays(10), logisticsDate:addDays(8),
+                roustabout:{start:addDays(9),end:addDays(11)}, misc:{start:addDays(9),end:addDays(10)} },
+      rigUp:  { location:'Marcellus', pad:'Pad F-8', date:addDays(20), logisticsDate:addDays(18),
+                roustabout:{start:addDays(19),end:addDays(22)}, misc:null } },
+    { num:'10', name:'FLEET # 10 - Corey Miller',  shortName:'Corey Miller',
+      rigDown:{ location:'Utica', pad:'Pad G-3', date:addDays(-10), logisticsDate:addDays(-13),
+                roustabout:{start:addDays(-11),end:addDays(-9)}, misc:{start:addDays(-11),end:addDays(-10)} },
+      rigUp:  { location:'DJ Basin', pad:'Pad H-1', date:addDays(7), logisticsDate:addDays(5),
+                roustabout:{start:addDays(6),end:addDays(9)}, misc:{start:addDays(6),end:addDays(7)} } },
+    { num:'13', name:'FLEET # 13 - Ryan Poorman',  shortName:'Ryan Poorman',
+      rigDown:{ location:'Niobrara', pad:'Pad I-2', date:addDays(0), logisticsDate:addDays(-2),
+                roustabout:{start:addDays(-1),end:addDays(1)}, misc:{start:addDays(0),end:addDays(1)} },
+      rigUp:  { location:'Niobrara', pad:'Pad J-6', date:addDays(12), logisticsDate:addDays(10),
+                roustabout:{start:addDays(11),end:addDays(14)}, misc:null } },
+    { num:'15', name:'FLEET # 15 - Jeremy Bower',  shortName:'Jeremy Bower',
+      rigDown:{ location:'Wattenberg', pad:'Pad K-4', date:addDays(6), logisticsDate:addDays(4),
+                roustabout:{start:addDays(5),end:addDays(7)}, misc:{start:addDays(5),end:addDays(6)} },
+      rigUp:  { location:'Wattenberg', pad:'Pad L-9', date:addDays(18), logisticsDate:addDays(16),
+                roustabout:{start:addDays(17),end:addDays(20)}, misc:{start:addDays(17),end:addDays(18)} } },
+  ]};
+  renderAll();
+  document.getElementById('lastUpdated').innerHTML = '⚠️ DEMO MODE';
+}
+
+// ============================================================
+//  NAVIGATION
+// ============================================================
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  const panel = document.getElementById('panel-'+id);
+  if (panel) panel.classList.add('active');
+  const tab = document.querySelector('[data-panel="'+id+'"]');
+  if (tab) { tab.classList.add('active'); tab.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); }
+  localStorage.setItem('evo-panel', id);
+}
+
+// ============================================================
+//  DARK MODE
+// ============================================================
+function toggleDark() {
+  const curr = document.documentElement.getAttribute('data-theme');
+  applyTheme(curr==='dark'?'light':'dark');
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('themeBtn').textContent = t==='dark' ? '☀️ Light' : '🌙 Dark';
+  localStorage.setItem('evo-theme', t);
+}
+</script>
+</body>
+</html>
