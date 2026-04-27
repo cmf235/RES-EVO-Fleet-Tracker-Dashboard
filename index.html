@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RES · EVO Fleet Tracker Dashboard</title>
-  <!-- v4 -->
+  <!-- v9 -->
   <style>
     /* ===== THEME VARIABLES ===== */
     :root {
@@ -976,6 +976,7 @@ function sideCard(side, label, cssClass) {
     + svcRow('RES Provided Semi / Hotshot', !!(side.semiHotshot))
     + sh('Add On Services')
     + svcRow('Misc', !!(side.misc && side.misc.start))
+    + (side.misc && side.misc.desc ? '<div class="detail-row"><div class="detail-lbl"></div><div class="detail-val" style="font-style:italic;color:var(--text-secondary);font-size:12px">' + esc(side.misc.desc) + '</div></div>' : '')
     + (side.misc && side.misc.start ? dRangeRow('Misc Dates', side.misc) : '')
     + sh('Roustabout Crew')
     + roustShiftRow
