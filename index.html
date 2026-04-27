@@ -258,7 +258,7 @@
     .cal-dow { background: var(--nav-bg); color: rgba(255,255,255,0.9); text-align: center; padding: 8px 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
     .cal-cell {
       background: var(--surface); min-height: 88px; padding: 5px 4px;
-      position: relative; overflow: hidden;
+      position: relative;
     }
     .cal-cell.other-month { background: var(--surface2); }
     .cal-cell.other-month .cal-day-num { opacity: 0.35; }
@@ -784,10 +784,10 @@ function renderCalendar() {
     const ds = calYear+'-'+pad2(calMonth+1)+'-'+pad2(d);
     const isToday = ds===today;
     const dayEvs = evMap[ds]||[];
-    const evHtml = dayEvs.slice(0,3).map(ev => {
+    const evHtml = dayEvs.map(ev => {
       const c = EV_COLORS[ev.type]||'#9E9E9E';
       return `<div class="cal-ev" style="background:${c}" title="Fleet #${ev.fleetNum} · ${ev.label}">#${ev.fleetNum} ${ev.label}</div>`;
-    }).join('') + (dayEvs.length>3 ? `<div class="cal-ev" style="background:#6b7280">+${dayEvs.length-3} more</div>` : '');
+    }).join('');
     html += `<div class="cal-cell${isToday?' cal-today':''}"><div class="cal-day-num">${d}</div>${evHtml}</div>`;
   }
   // Next month padding
