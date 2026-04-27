@@ -917,6 +917,7 @@ function sideCard(side, label, cssClass) {
   var shiftParts = [];
   if (side.dayShift)   shiftParts.push('DAY SHIFT &#x2600;&#xFE0F;');
   if (side.nightShift) shiftParts.push('NIGHT SHIFT <span style="display:inline-block;filter:sepia(1)saturate(8)hue-rotate(195deg)">&#x1F319;</span>');
+  if (side.hotel)      shiftParts.push('HOTEL &#x1F3E8;');
   var shiftRow = shiftParts.length
     ? '<div class="detail-row"><div class="detail-lbl">Shift</div>'
       + '<div class="detail-val" style="font-weight:600;letter-spacing:0.03em;font-size:12px">'
