@@ -956,6 +956,15 @@ function fleetPanel(f) {
   </div>`;
 }
 
+function svcRow(label, isBooked) {
+  const icon  = isBooked ? '✅' : '⬜';
+  const style = isBooked ? 'color:var(--text)' : 'color:var(--text-secondary)';
+  return `<div class="detail-row" style="padding:9px 18px">
+    <span style="font-size:15px;margin-right:10px">${icon}</span>
+    <span style="${style};font-size:13px">${label}</span>
+  </div>`;
+}
+
 function dRow(label, value, end, isDate) {
   let display = value;
   let c = '';
