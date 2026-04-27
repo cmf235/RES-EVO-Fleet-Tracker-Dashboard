@@ -912,60 +912,63 @@ function renderFleetPanels() {
   });
 }
 
-function fleetPanel(f) {
-  const color=FLEET_COLORS[f.num]||'#1565C0';
-  const rd=f.rigDown, ru=f.rigUp;
-  return `
-  <div class="fleet-page-header">
-    <div class="fleet-badge-lg" style="background:${color}">${f.num}</div>
-    <div>
-      <div class="fleet-page-title">${esc(f.name)}</div>
-      <div class="fleet-page-sub">Detailed schedule · Click any card to return to summary</div>
-    </div>
-  </div>
-  <div class="fleet-detail-grid">
-    <div class="section-card">
-      <div class="sc-header rigdown">🔴 &nbsp;Rig Down</div>
-      ${dRow('Location', rd.location)}
-      ${dRow('Pad', rd.pad)}
-      ${dRow('Rig Down Date', rd.date, null, true)}
-      ${dRow('Logistics Date', rd.logisticsDate, null, true)}
-      <div class="sub-header">Roustabout Crew</div>
-      ${dRangeRow('Dates', rd.roustabout)}
-      <div class="sub-header">Misc Services</div>
-      ${dRangeRow('Dates', rd.misc)}
-    </div>
-    <div class="section-card">
-      <div class="sc-header rigup">🟢 &nbsp;Rig Up</div>
-      ${dRow('Location', ru.location)}
-      ${dRow('Pad', ru.pad)}
-      ${dRow('Rig Up Date', ru.date, null, true)}
-      ${dRow('Logistics Date', ru.logisticsDate, null, true)}
-      <div class="sub-header">Roustabout Crew</div>
-      ${dRangeRow('Dates', ru.roustabout)}
-      <div class="sub-header">Misc Services</div>
-      ${dRangeRow('Dates', ru.misc)}
-    </div>
-  </div>
-  <div class="section-card" style="margin-top:20px">
-    <div class="sc-header" style="background:linear-gradient(135deg,#37474f,#546e7a);color:#fff">🔧 &nbsp;Services</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
-      <div>
-        <div class="sub-header">Rig Down</div>
-        ${svcRow('Logistics',       !!(rd.logisticsDate))}
-        ${svcRow('Roustabout Crew', !!(rd.roustabout&&rd.roustabout.start))}
-        ${svcRow('Misc Services',   !!(rd.misc&&rd.misc.start))}
-      </div>
-      <div>
-        <div class="sub-header">Rig Up</div>
-        ${svcRow('Logistics',       !!(ru.logisticsDate))}
-        ${svcRow('Roustabout Crew', !!(ru.roustabout&&ru.roustabout.start))}
-        ${svcRow('Misc Services',   !!(ru.misc&&ru.misc.start))}
-      </div>
-    </div>
-  </div>`;
+function sideCard(side, label, cssClass) {
+  var shifts = [
+    side.dayShift   ? '<span title="Day shift"   style="font-size:14px">☀️</span>' : '',
+    side.nightShift ? '<span title="Night shift" style="font-size:14px">🌙</span>'  : ''
+  ].filter(Boolean).join('&nbsp;');
+  var timeRow = (side.timeOnPad || shifts)
+    ? '<div class="detail-row"><div class="detail-lbl">Time on Pad</div>'
+      + '<div class="detail-val">'
+      + (side.timeOnPad ? esc(side.timeOnPad) : '—')
+      + (shifts ? '&nbsp;&nbsp;' + shifts : '')
+      + '</div></div>'
+    : '';
+  function sh(t) {
+    return '<div class="sub-header" style="text-transform:uppercase;font-size:10px;'
+         + 'letter-spacing:0.07em;padding:8px 14px 4px;color:var(--text-secondary)">' + t + '</div>';
+  }
+  var dateLabel = cssClass === 'rigdown' ? 'Rig Down Date' : 'Rig Up Date';
+  return '<div class="section-card">'
+    + '<div class="sc-header ' + cssClass + '">' + label + '</div>'
+    + dRow('Location', side.location)
+    + dRow('Pad', side.pad)
+    + dRow(dateLabel, side.date, null, true)
+    + timeRow
+    + dRow('Logistics Date', side.logisticsDate, null, true)
+    + sh('Services')
+    + svcRow('Monoline Iron',           !!(side.monolineIron))
+    + svcRow('Pumpdown Iron',           !!(side.pumpdownIron))
+    + svcRow('Low Pressure Iron',       !!(side.lowPressureIron))
+    + svcRow('Flowback Iron',           !!(side.flowbackIron))
+    + svcRow('High Pressure Hoses',     !!(side.highPressureHoses))
+    + svcRow('Rig Mats / Barrier Wall', !!(side.rigMatsBarrierWall))
+    + svcRow('Pull Cables',             !!(side.pullCables))
+    + sh('Logistics')
+    + svcRow('RES Load Transports',          !!(side.resLoadTransports))
+    + svcRow('RES Unload Transports',        !!(side.resUnloadTransports))
+    + svcRow('RES Provided Semi / Hotshot',  !!(side.resProvidedSemiHotshot))
+    + sh('Add On Services')
+    + svcRow('Misc', !!(side.misc && side.misc.start))
+    + (side.misc && side.misc.start ? dRangeRow('Misc Dates', side.misc) : '')
+    + sh('Roustabout Crew')
+    + dRangeRow('Dates', side.roustabout)
+    + '</div>';
 }
 
+function fleetPanel(f) {
+  var color = FLEET_COLORS[f.num] || '#1565C0';
+  var rd = f.rigDown, ru = f.rigUp;
+  return '<div class="fleet-page-header">'
+    + '<div class="fleet-badge-lg" style="background:' + color + '">' + f.num + '</div>'
+    + '<div><div class="fleet-page-title">' + esc(f.name) + '</div>'
+    + '<div class="fleet-page-sub">Detailed schedule · Click any card to return to summary</div>'
+    + '</div></div>'
+    + '<div class="fleet-detail-grid">'
+    + sideCard(rd, '🔴&nbsp; Rig Down', 'rigdown')
+    + sideCard(ru, '🟢&nbsp; Rig Up',   'rigup')
+    + '</div>';
+}
 function dRow(label, value, end, isDate) {
   let display = value;
   let c = '';
