@@ -1065,4 +1065,18 @@ function loadDemoData() {
   document.getElementById('lastUpdated').innerHTML = '⚠️ DEMO MODE';
 }
 
-// ======================================================
+// ======================================================// ============================================================
+//  DARK MODE
+// ============================================================
+function toggleDark() {
+  const curr = document.documentElement.getAttribute('data-theme');
+  applyTheme(curr==='dark'?'light':'dark');
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('themeBtn').textContent = t==='dark' ? '☀️ Light' : '🌙 Dark';
+  localStorage.setItem('evo-theme', t);
+}
+</script>
+</body>
+</html>
