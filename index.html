@@ -942,6 +942,18 @@ function sideCard(side, label, cssClass) {
          + 'letter-spacing:0.07em;padding:8px 14px 4px;color:var(--text-secondary)">' + t + '</div>';
   }
 
+  // Roustabout shift row
+  var roust = side.roustabout || {};
+  var roustShiftParts = [];
+  if (roust.dayShift)   roustShiftParts.push('DAY SHIFT &#x2600;&#xFE0F;');
+  if (roust.nightShift) roustShiftParts.push('NIGHT SHIFT <span style="display:inline-block;filter:sepia(1)saturate(8)hue-rotate(195deg)">&#x1F319;</span>');
+  var roustShiftRow = roustShiftParts.length
+    ? '<div class="detail-row"><div class="detail-lbl">Shift</div>'
+      + '<div class="detail-val" style="font-weight:600;letter-spacing:0.03em;font-size:12px">'
+      + roustShiftParts.join('&ensp;&middot;&ensp;')
+      + '</div></div>'
+    : '';
+
   var dateLabel = cssClass === 'rigdown' ? 'Rig Down Date' : 'Rig Up Date';
   return '<div class="section-card">'
     + '<div class="sc-header ' + cssClass + '">' + label + '</div>'
@@ -966,6 +978,7 @@ function sideCard(side, label, cssClass) {
     + svcRow('Misc', !!(side.misc && side.misc.start))
     + (side.misc && side.misc.start ? dRangeRow('Misc Dates', side.misc) : '')
     + sh('Roustabout Crew')
+    + roustShiftRow
     + dRangeRow('Roustabout Dates', side.roustabout)
     + '</div>';
 }
