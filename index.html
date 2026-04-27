@@ -620,14 +620,14 @@ function esc(s) {
 function collectEvents(f) {
   const ev = [];
   const rd = f.rigDown, ru = f.rigUp;
-  if (rd.date)           ev.push({type:'rigdown',     label:'Rig Down',      start:rd.date, end:rd.date});
-  if (rd.logisticsDate)  ev.push({type:'rigdown_log', label:'RD Logistics',  start:rd.logisticsDate, end:rd.logisticsDate});
-  if (rd.roustabout&&rd.roustabout.start) ev.push({type:'roustabout', label:'RD Roustabout', start:rd.roustabout.start, end:rd.roustabout.end||rd.roustabout.start});
-  if (rd.misc&&rd.misc.start)             ev.push({type:'misc',       label:'RD Misc',        start:rd.misc.start,       end:rd.misc.end||rd.misc.start});
-  if (ru.date)           ev.push({type:'rigup',       label:'Rig Up',        start:ru.date, end:ru.date});
-  if (ru.logisticsDate)  ev.push({type:'rigup_log',   label:'RU Logistics',  start:ru.logisticsDate, end:ru.logisticsDate});
-  if (ru.roustabout&&ru.roustabout.start) ev.push({type:'roustabout', label:'RU Roustabout', start:ru.roustabout.start, end:ru.roustabout.end||ru.roustabout.start});
-  if (ru.misc&&ru.misc.start)             ev.push({type:'misc',       label:'RU Misc',        start:ru.misc.start,       end:ru.misc.end||ru.misc.start});
+  if (rd.date)           ev.push({type:'rigdown',     label:'Rig Down',      start:rd.date, end:rd.date, loc:rd.location, pad:rd.pad});
+  if (rd.logisticsDate)  ev.push({type:'rigdown_log', label:'RD Logistics',  start:rd.logisticsDate, end:rd.logisticsDate, loc:rd.location, pad:rd.pad});
+  if (rd.roustabout&&rd.roustabout.start) ev.push({type:'roustabout', label:'RD Roustabout', start:rd.roustabout.start, end:rd.roustabout.end||rd.roustabout.start, loc:rd.location, pad:rd.pad});
+  if (rd.misc&&rd.misc.start)             ev.push({type:'misc',       label:'RD Misc',        start:rd.misc.start,       end:rd.misc.end||rd.misc.start, loc:rd.location, pad:rd.pad});
+  if (ru.date)           ev.push({type:'rigup',       label:'Rig Up',        start:ru.date, end:ru.date, loc:ru.location, pad:ru.pad});
+  if (ru.logisticsDate)  ev.push({type:'rigup_log',   label:'RU Logistics',  start:ru.logisticsDate, end:ru.logisticsDate, loc:ru.location, pad:ru.pad});
+  if (ru.roustabout&&ru.roustabout.start) ev.push({type:'roustabout', label:'RU Roustabout', start:ru.roustabout.start, end:ru.roustabout.end||ru.roustabout.start, loc:ru.location, pad:ru.pad});
+  if (ru.misc&&ru.misc.start)             ev.push({type:'misc',       label:'RU Misc',        start:ru.misc.start,       end:ru.misc.end||ru.misc.start, loc:ru.location, pad:ru.pad});
   return ev;
 }
 
@@ -786,7 +786,9 @@ function renderCalendar() {
     const dayEvs = evMap[ds]||[];
     const evHtml = dayEvs.map(ev => {
       const c = EV_COLORS[ev.type]||'#9E9E9E';
-      return `<div class="cal-ev" style="background:${c}" title="Fleet #${ev.fleetNum} · ${ev.label}">#${ev.fleetNum} ${ev.label}</div>`;
+      const meta = [ev.loc, ev.pad].filter(Boolean).join(' · ');
+      const titleTxt = `Fleet #${ev.fleetNum} · ${ev.label}${meta ? ' | '+meta : ''}`;
+      return `<div class="cal-ev" style="background:${c}" title="${titleTxt}">#${ev.fleetNum} ${ev.label}${meta ? '<span style="opacity:0.8;font-weight:400"> · '+meta+'</span>' : ''}</div>`;
     }).join('');
     html += `<div class="cal-cell${isToday?' cal-today':''}"><div class="cal-day-num">${d}</div>${evHtml}</div>`;
   }
@@ -933,6 +935,23 @@ function fleetPanel(f) {
       ${dRangeRow('Dates', ru.roustabout)}
       <div class="sub-header">Misc Services</div>
       ${dRangeRow('Dates', ru.misc)}
+    </div>
+  </div>
+  <div class="section-card" style="margin-top:20px">
+    <div class="sc-header" style="background:linear-gradient(135deg,#37474f,#546e7a);color:#fff">🔧 &nbsp;Services</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
+      <div>
+        <div class="sub-header">Rig Down</div>
+        ${svcRow('Logistics',       !!(rd.logisticsDate))}
+        ${svcRow('Roustabout Crew', !!(rd.roustabout&&rd.roustabout.start))}
+        ${svcRow('Misc Services',   !!(rd.misc&&rd.misc.start))}
+      </div>
+      <div>
+        <div class="sub-header">Rig Up</div>
+        ${svcRow('Logistics',       !!(ru.logisticsDate))}
+        ${svcRow('Roustabout Crew', !!(ru.roustabout&&ru.roustabout.start))}
+        ${svcRow('Misc Services',   !!(ru.misc&&ru.misc.start))}
+      </div>
     </div>
   </div>`;
 }
