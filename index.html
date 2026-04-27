@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RES · EVO Fleet Tracker Dashboard</title>
+  <!-- v4 -->
   <style>
     /* ===== THEME VARIABLES ===== */
     :root {
@@ -895,6 +896,15 @@ function renderGantt() {
 // ============================================================
 //  FLEET DETAIL PANELS
 // ============================================================
+function svcRow(label, isBooked) {
+  const icon  = isBooked ? '\u2705' : '\u2B1C';
+  const style = isBooked ? 'color:var(--text)' : 'color:var(--text-secondary)';
+  return '<div class="detail-row" style="padding:9px 18px">'
+    + '<span style="font-size:15px;margin-right:10px">' + icon + '</span>'
+    + '<span style="' + style + ';font-size:13px">' + label + '</span>'
+    + '</div>';
+}
+
 function renderFleetPanels() {
   appData.fleets.forEach(f => {
     const el = document.getElementById('panel-fleet-'+f.num);
@@ -953,15 +963,6 @@ function fleetPanel(f) {
         ${svcRow('Misc Services',   !!(ru.misc&&ru.misc.start))}
       </div>
     </div>
-  </div>`;
-}
-
-function svcRow(label, isBooked) {
-  const icon  = isBooked ? '✅' : '⬜';
-  const style = isBooked ? 'color:var(--text)' : 'color:var(--text-secondary)';
-  return `<div class="detail-row" style="padding:9px 18px">
-    <span style="font-size:15px;margin-right:10px">${icon}</span>
-    <span style="${style};font-size:13px">${label}</span>
   </div>`;
 }
 
