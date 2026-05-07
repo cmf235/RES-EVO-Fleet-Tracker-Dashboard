@@ -221,6 +221,12 @@
     .ev-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
     .ev-label { font-size: 11px; color: var(--text-secondary); min-width: 90px; }
     .ev-value { font-size: 12px; font-weight: 500; flex: 1; }
+    .ev-time {
+      display: inline-block; margin-left: 6px;
+      font-size: 11px; font-weight: 600;
+      color: var(--text-secondary); background: var(--surface2);
+      padding: 1px 7px; border-radius: 8px;
+    }
     .ev-chip { margin-left: auto; flex-shrink: 0; }
 
     /* ===== CHIPS ===== */
@@ -880,15 +886,18 @@ function renderSummary() {
 
 function detectConflicts(allEv) {
   const out = [];
+  const today = todayISO();
+  // Only consider events that haven't already finished — past events don't conflict with anything
+  const upcoming = allEv.filter(e => (e.end || e.start) >= today);
   // Same-date rig events across different fleets
-  const rigs = allEv.filter(e => e.type==='rigdown'||e.type==='rigup');
+  const rigs = upcoming.filter(e => e.type==='rigdown'||e.type==='rigup');
   for (let i=0;i<rigs.length;i++) for (let j=i+1;j<rigs.length;j++) {
     if (rigs[i].fleetNum===rigs[j].fleetNum) continue;
     if (rigs[i].start===rigs[j].start)
       out.push('Fleet #'+rigs[i].fleetNum+' ('+rigs[i].label+') and Fleet #'+rigs[j].fleetNum+' ('+rigs[j].label+') scheduled on '+fmt(rigs[i].start));
   }
   // Roustabout overlaps
-  const roust = allEv.filter(e => e.type==='roustabout');
+  const roust = upcoming.filter(e => e.type==='roustabout');
   for (let i=0;i<roust.length;i++) for (let j=i+1;j<roust.length;j++) {
     if (roust[i].fleetNum===roust[j].fleetNum) continue;
     const aS=roust[i].start, aE=roust[i].end||roust[i].start;
@@ -907,14 +916,14 @@ function summaryCard(f) {
   const subtitle = [loc,pad].filter(Boolean).join(' · ');
 
   const rows = [
-    rd.date           && evRow('rigdown',     'Rig Down',      rd.date, null),
-    rd.logisticsDate  && evRow('rigdown_log', 'RD Logistics',  rd.logisticsDate, null),
-    rd.roustabout&&rd.roustabout.start && evRow('roustabout','RD Roustabout',rd.roustabout.start,rd.roustabout.end),
-    rd.misc&&rd.misc.start             && evRow('misc',       'RD Misc',        rd.misc.start,       rd.misc.end),
-    ru.date           && evRow('rigup',       'Rig Up',        ru.date, null),
-    ru.logisticsDate  && evRow('rigup_log',   'RU Logistics',  ru.logisticsDate, null),
-    ru.roustabout&&ru.roustabout.start && evRow('roustabout','RU Roustabout',ru.roustabout.start,ru.roustabout.end),
-    ru.misc&&ru.misc.start             && evRow('misc',       'RU Misc',        ru.misc.start,       ru.misc.end),
+    rd.date           && evRow('rigdown',     'Rig Down',      rd.date, null,                  rd.time),
+    rd.logisticsDate  && evRow('rigdown_log', 'RD Logistics',  rd.logisticsDate, null,         rd.logisticsTime),
+    rd.roustabout&&rd.roustabout.start && evRow('roustabout','RD Roustabout',rd.roustabout.start,rd.roustabout.end, rd.roustabout.startTime),
+    rd.misc&&rd.misc.start             && evRow('misc',       'RD Misc',        rd.misc.start,       rd.misc.end,        rd.misc.startTime),
+    ru.date           && evRow('rigup',       'Rig Up',        ru.date, null,                  ru.time),
+    ru.logisticsDate  && evRow('rigup_log',   'RU Logistics',  ru.logisticsDate, null,         ru.logisticsTime),
+    ru.roustabout&&ru.roustabout.start && evRow('roustabout','RU Roustabout',ru.roustabout.start,ru.roustabout.end, ru.roustabout.startTime),
+    ru.misc&&ru.misc.start             && evRow('misc',       'RU Misc',        ru.misc.start,       ru.misc.end,        ru.misc.startTime),
   ].filter(Boolean).join('');
 
   return `<div class="card" onclick="showPanel('fleet-${f.num}')" style="cursor:pointer;transition:box-shadow 0.15s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)'" onmouseout="this.style.boxShadow=''">
@@ -932,14 +941,17 @@ function summaryCard(f) {
   </div>`;
 }
 
-function evRow(type, label, start, end) {
+function evRow(type, label, start, end, time) {
   const color = EV_COLORS[type]||'#9E9E9E';
   const dateStr = fmtRange(start, end);
   if (!dateStr) return '';
+  const timeStr = time
+    ? `<span class="ev-time">⏰ ${esc(String(time))}</span>`
+    : '';
   return `<div class="event-row">
     <div class="ev-dot" style="background:${color}"></div>
     <div class="ev-label">${label}</div>
-    <div class="ev-value">${dateStr}</div>
+    <div class="ev-value">${dateStr}${timeStr}</div>
     <div class="ev-chip">${chip(start,end)}</div>
   </div>`;
 }
