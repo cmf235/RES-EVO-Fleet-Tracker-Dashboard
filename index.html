@@ -350,15 +350,91 @@
     .no-data-icon { font-size: 40px; margin-bottom: 10px; }
     .no-data p { font-size: 14px; }
 
+    /* ===== DAY DETAIL MODAL (mobile tap-to-view) ===== */
+    .day-modal-bg {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 500;
+      align-items: flex-end; justify-content: center;
+    }
+    .day-modal-bg.show { display: flex; }
+    .day-modal {
+      background: var(--surface); color: var(--text);
+      width: 100%; max-width: 480px;
+      max-height: 80vh; overflow-y: auto;
+      border-radius: 16px 16px 0 0;
+      padding: 16px 18px 24px;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.25);
+      animation: slideUp 0.2s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .day-modal-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 12px;
+    }
+    .day-modal-title { font-size: 16px; font-weight: 700; }
+    .day-modal-close {
+      background: var(--surface2); border: none; color: var(--text);
+      width: 32px; height: 32px; border-radius: 50%;
+      font-size: 20px; cursor: pointer; line-height: 1;
+    }
+    .day-modal-ev {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .day-modal-ev:last-child { border-bottom: none; }
+    .day-modal-ev .ev-bar {
+      width: 4px; align-self: stretch; border-radius: 2px; flex-shrink: 0;
+    }
+    .day-modal-ev .ev-text { flex: 1; }
+    .day-modal-ev .ev-fleet { font-weight: 700; color: var(--primary); }
+    .day-modal-ev .ev-meta { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+    .day-modal-empty { color: var(--text-secondary); font-size: 13px; text-align: center; padding: 12px 0; }
+
     /* ===== RESPONSIVE ===== */
     @media (max-width: 640px) {
       .header { height: auto; padding: 10px 14px; flex-wrap: wrap; gap: 8px; }
       .nav { top: 0; position: relative; }
-      .main { padding: 12px; }
+      .main { padding: 12px 8px; }
       .cards-grid { grid-template-columns: 1fr; }
       .stats-row { grid-template-columns: repeat(2, 1fr); }
       .last-updated { display: none; }
-      .cal-month-lbl { min-width: 160px; font-size: 14px; }
+
+      /* Calendar controls fit one row */
+      .cal-controls { gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+      .cal-month-lbl { min-width: 0; flex: 1; font-size: 14px; }
+      .cal-nav-btn { width: 30px; height: 30px; font-size: 16px; }
+      .cal-today-btn { padding: 4px 10px; font-size: 11px; margin-left: 0; }
+
+      /* Legend: tighter spacing */
+      .legend { gap: 6px 8px; margin-bottom: 10px; }
+      .legend-item { font-size: 10px; gap: 4px; }
+      .legend-dot { width: 9px; height: 9px; }
+
+      /* Calendar grid: shrink everything to fit 7 cols on a phone */
+      .cal-grid { font-size: 10px; }
+      .cal-dow { padding: 5px 1px; font-size: 9px; letter-spacing: 0; }
+      .cal-cell { min-height: 56px; padding: 2px 2px; }
+      .cal-day-num { font-size: 10px; width: 16px; height: 16px; margin-bottom: 2px; }
+
+      /* Events: hide text, show as thin colored bars (tap day for details) */
+      .cal-ev {
+        font-size: 0; padding: 0; margin-bottom: 2px;
+        height: 4px; line-height: 4px;
+        border-left: none; border-radius: 2px;
+        text-overflow: clip; white-space: nowrap;
+      }
+      .cal-ev > span { display: none; }
+      .cal-cell { cursor: pointer; -webkit-tap-highlight-color: rgba(21,101,192,0.15); }
+      .cal-cell:active { background: var(--primary-light); }
+    }
+
+    @media (max-width: 400px) {
+      .main { padding: 10px 4px; }
+      .cal-cell { min-height: 48px; }
+      .cal-day-num { font-size: 9px; width: 14px; height: 14px; }
+      .cal-ev { height: 3px; }
+      .cal-dow { padding: 4px 0; font-size: 8px; }
     }
 
     /* ===== PRINT ===== */
@@ -449,6 +525,17 @@
     </div>
     <div class="card">
       <div class="cal-grid" id="calGrid"></div>
+    </div>
+  </div>
+
+  <!-- DAY DETAIL MODAL (mobile) -->
+  <div class="day-modal-bg" id="dayModalBg" onclick="closeDayModal(event)">
+    <div class="day-modal" onclick="event.stopPropagation()">
+      <div class="day-modal-hdr">
+        <div class="day-modal-title" id="dayModalTitle">—</div>
+        <button class="day-modal-close" onclick="closeDayModal()" aria-label="Close">×</button>
+      </div>
+      <div id="dayModalBody"></div>
     </div>
   </div>
 
@@ -781,17 +868,19 @@ function renderCalendar() {
     html += `<div class="cal-cell other-month"><div class="cal-day-num">${daysInPrev-firstDow+i+1}</div></div>`;
   }
   // Days
+  calDayEvents = {};
   for (let d=1; d<=daysInMonth; d++) {
     const ds = calYear+'-'+pad2(calMonth+1)+'-'+pad2(d);
     const isToday = ds===today;
     const dayEvs = evMap[ds]||[];
+    calDayEvents[ds] = dayEvs;
     const evHtml = dayEvs.map(ev => {
       const c = EV_COLORS[ev.type]||'#9E9E9E';
       const meta = [ev.loc, ev.pad].filter(Boolean).join(' · ');
       const titleTxt = `Fleet #${ev.fleetNum} · ${ev.label}${meta ? ' | '+meta : ''}`;
-      return `<div class="cal-ev" style="background:${c}" title="${titleTxt}">#${ev.fleetNum} ${ev.label}${meta ? '<span style="opacity:0.8;font-weight:400"> · '+meta+'</span>' : ''}</div>`;
+      return `<div class="cal-ev" style="background:${c}" title="${titleTxt}"><span>#${ev.fleetNum} ${ev.label}${meta ? '<span style="opacity:0.8;font-weight:400"> · '+meta+'</span>' : ''}</span></div>`;
     }).join('');
-    html += `<div class="cal-cell${isToday?' cal-today':''}"><div class="cal-day-num">${d}</div>${evHtml}</div>`;
+    html += `<div class="cal-cell${isToday?' cal-today':''}" data-date="${ds}" onclick="openDayDetail('${ds}')"><div class="cal-day-num">${d}</div>${evHtml}</div>`;
   }
   // Next month padding
   const used = firstDow + daysInMonth;
@@ -799,6 +888,39 @@ function renderCalendar() {
   for (let i=1; i<=rem; i++) html += `<div class="cal-cell other-month"><div class="cal-day-num">${i}</div></div>`;
 
   document.getElementById('calGrid').innerHTML = html;
+}
+
+// Day detail popup (used on mobile when event text is hidden)
+let calDayEvents = {};
+function openDayDetail(ds) {
+  // Only open the modal on small screens; desktop already shows event text in cells
+  if (window.innerWidth > 640) return;
+  const evs = calDayEvents[ds] || [];
+  const [yy, mm, dd] = ds.split('-').map(Number);
+  const dateObj = new Date(yy, mm-1, dd);
+  const dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][dateObj.getDay()];
+  document.getElementById('dayModalTitle').textContent = `${dayName}, ${MONTH_NAMES[mm-1]} ${dd}`;
+  const body = document.getElementById('dayModalBody');
+  if (!evs.length) {
+    body.innerHTML = '<div class="day-modal-empty">No events scheduled.</div>';
+  } else {
+    body.innerHTML = evs.map(ev => {
+      const c = EV_COLORS[ev.type]||'#9E9E9E';
+      const meta = [ev.loc, ev.pad].filter(Boolean).join(' · ');
+      return `<div class="day-modal-ev">
+        <div class="ev-bar" style="background:${c}"></div>
+        <div class="ev-text">
+          <div><span class="ev-fleet">Fleet #${ev.fleetNum}</span> · ${ev.label}</div>
+          ${meta ? `<div class="ev-meta">${meta}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('dayModalBg').classList.add('show');
+}
+function closeDayModal(e) {
+  if (e && e.target && !e.target.classList.contains('day-modal-bg') && e.type === 'click') return;
+  document.getElementById('dayModalBg').classList.remove('show');
 }
 
 // ============================================================
