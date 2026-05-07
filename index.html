@@ -81,7 +81,13 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
     .header-left { display: flex; align-items: center; gap: 14px; }
-    .header-logo { font-size: 26px; line-height: 1; }
+    .header-logo { font-size: 26px; line-height: 1; display: flex; align-items: center; }
+    .header-logo img {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #fff; padding: 2px;
+      object-fit: contain;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    }
     .header-title h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
     .header-title p { font-size: 10px; opacity: 0.65; letter-spacing: 0.3px; margin-top: 1px; }
     .header-right { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
@@ -548,7 +554,7 @@
 <!-- ===== HEADER ===== -->
 <header class="header">
   <div class="header-left">
-    <div class="header-logo">🛢️</div>
+    <div class="header-logo"><img src="logo.png" alt="RES logo" onerror="this.style.display='none';this.parentElement.innerHTML='\u{1F6E2}\uFE0F';this.parentElement.style.fontSize='26px';"></div>
     <div class="header-title">
       <h1>RES · EVO Fleet Tracker</h1>
       <p>LIVE DASHBOARD &nbsp;·&nbsp; AUTO-REFRESH EVERY 5 MIN</p>
