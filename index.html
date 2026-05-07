@@ -32,7 +32,7 @@
       --roustabout-bg: #F3E5F5;
       --misc: #E65100;
       --misc-bg: #FFF3E0;
-      --cal-line: #b8bfca;
+      --cal-line: #a8b0bd;
     }
     [data-theme="dark"] {
       --bg: #0f1117;
@@ -52,7 +52,7 @@
       --rigup-bg: #0d1f0d;
       --roustabout-bg: #1f0d2e;
       --misc-bg: #2a1a00;
-      --cal-line: #525a6c;
+      --cal-line: #5d6478;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -263,18 +263,17 @@
       background: var(--nav-bg); color: rgba(255,255,255,0.9);
       text-align: center; padding: 8px 4px;
       font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
-      border-right: 1px solid rgba(255,255,255,0.12);
+      box-shadow: inset -1px 0 0 rgba(255,255,255,0.15);
     }
-    .cal-dow:nth-child(7) { border-right: none; }
     .cal-cell {
       background: var(--surface); min-height: 88px; padding: 5px 4px;
       position: relative; cursor: pointer;
       transition: background 0.12s;
-      border-right: 1px solid var(--cal-line);
-      border-top: 1px solid var(--cal-line);
+      /* Always-rendered grid lines via inset box-shadow on every cell */
+      box-shadow:
+        inset -1px 0 0 var(--cal-line),
+        inset 0 -1px 0 var(--cal-line);
     }
-    /* Right edge cells (every 7th cell after the 7 DOW headers) skip right border */
-    .cal-grid > .cal-cell:nth-child(7n) { border-right: none; }
     .cal-cell:hover:not(.other-month) { background: var(--surface2); }
     .cal-cell.other-month { background: var(--surface2); }
     .cal-cell.other-month .cal-day-num { opacity: 0.35; }
