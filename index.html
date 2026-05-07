@@ -293,10 +293,19 @@
     }
 
     /* ===== GANTT ===== */
-    .gantt-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+    .gantt-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
     .gantt-inner { min-width: 900px; }
     .gantt-hdr { display: flex; background: var(--nav-bg); border-bottom: 2px solid var(--border); }
-    .gantt-lbl-col { width: 190px; min-width: 190px; flex-shrink: 0; padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,0.7); border-right: 1px solid rgba(255,255,255,0.15); }
+    .gantt-lbl-col {
+      width: 190px; min-width: 190px; flex-shrink: 0;
+      padding: 10px 14px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      color: rgba(255,255,255,0.7);
+      border-right: 1px solid rgba(255,255,255,0.15);
+      position: sticky; left: 0; z-index: 6;
+      background: var(--nav-bg);
+      box-shadow: 2px 0 4px rgba(0,0,0,0.18);
+    }
     .gantt-months { flex: 1; display: flex; overflow: hidden; }
     .gantt-month-lbl { color: rgba(255,255,255,0.85); font-size: 11px; font-weight: 700; padding: 10px 8px; border-right: 1px solid rgba(255,255,255,0.15); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; flex-shrink: 0; }
     .gantt-rows { }
@@ -308,16 +317,30 @@
       border-right: 1px solid var(--border);
       display: flex; align-items: center; gap: 6px;
       background: var(--surface);
+      position: sticky; left: 0; z-index: 4;
+      box-shadow: 2px 0 4px rgba(0,0,0,0.08);
     }
-    .gantt-row-lbl.fleet-hdr { background: var(--surface2); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-secondary); }
+    .gantt-row-lbl.fleet-hdr {
+      background: var(--surface2);
+      font-weight: 700; font-size: 11px;
+      text-transform: uppercase; letter-spacing: 0.3px;
+      color: var(--text-secondary);
+      z-index: 5;
+    }
     .gantt-track { flex: 1; position: relative; height: 34px; background: var(--surface); overflow: visible; }
     .gantt-row.fleet-hdr-row .gantt-track { background: var(--surface2); }
     .gantt-bar {
       position: absolute; top: 5px; height: 24px; border-radius: 4px;
       display: flex; align-items: center; padding: 0 6px;
       font-size: 9.5px; font-weight: 700; color: #fff;
-      white-space: nowrap; overflow: hidden; cursor: default;
+      white-space: nowrap; overflow: hidden; cursor: pointer;
       box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .gantt-bar:hover, .gantt-bar:active {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+      z-index: 3;
     }
     .gantt-today-line {
       position: absolute; top: 0; bottom: 0; width: 2px;
@@ -480,6 +503,29 @@
       .cal-day-num { font-size: 9px; width: 14px; height: 14px; }
       .cal-ev { height: 3px; }
       .cal-dow { padding: 4px 0; font-size: 8px; }
+    }
+
+    /* ===== GANTT MOBILE ===== */
+    @media (max-width: 640px) {
+      .gantt-inner { min-width: 640px; }
+      .gantt-lbl-col,
+      .gantt-row-lbl {
+        width: 110px; min-width: 110px;
+        padding: 6px 8px; font-size: 10.5px;
+      }
+      .gantt-row-lbl.gantt-row-lbl-sub { padding-left: 14px !important; font-size: 10px; }
+      .gantt-month-lbl { padding: 8px 4px; font-size: 10px; }
+      .gantt-track { height: 28px; }
+      .gantt-bar {
+        top: 4px; height: 20px; font-size: 8.5px; padding: 0 4px;
+        border-radius: 3px;
+      }
+    }
+    @media (max-width: 400px) {
+      .gantt-inner { min-width: 560px; }
+      .gantt-lbl-col,
+      .gantt-row-lbl { width: 96px; min-width: 96px; padding: 5px 6px; font-size: 10px; }
+      .gantt-row-lbl.gantt-row-lbl-sub { padding-left: 10px !important; font-size: 9.5px; }
     }
 
     /* ===== PRINT ===== */
@@ -1013,6 +1059,37 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// Gantt bar tap → show that single event's full details in the same modal
+let ganttBarEvents = [];
+function openGanttBarDetail(idx) {
+  const ev = ganttBarEvents[idx];
+  if (!ev) return;
+  const c = EV_COLORS[ev.type]||'#9E9E9E';
+  const icon = (typeof EV_ICONS !== 'undefined' && EV_ICONS[ev.type]) || '•';
+  const locPad = [ev.loc, ev.pad ? 'Pad '+ev.pad : ''].filter(Boolean).join(' · ');
+  const dt = (ev.start && ev.end && ev.start !== ev.end)
+              ? fmtRange(ev.start, ev.end)
+              : (fmt(ev.start) || ev.start);
+  document.getElementById('dayModalTitle').textContent = `Fleet #${ev.fleetNum} · ${ev.fleetName||''}`.trim();
+  document.getElementById('dayModalBody').innerHTML = `<div class="dm-event">
+    <div class="dm-bar" style="background:${c}"></div>
+    <div class="dm-body">
+      <div class="dm-title" style="color:${c}">
+        <span style="font-size:16px">${icon}</span>
+        <span>${esc(ev.label)}</span>
+        <span class="dm-fleet-tag">FLEET #${ev.fleetNum}</span>
+      </div>
+      <div class="dm-row"><div class="dm-lbl">Location & Pad</div>
+        <div class="dm-val${locPad?'':' empty'}">${locPad ? esc(locPad) : 'Not specified'}</div></div>
+      <div class="dm-row"><div class="dm-lbl">Date & Time</div>
+        <div class="dm-val">${dt || ''}</div></div>
+      <div class="dm-row"><div class="dm-lbl">Shift</div>
+        <div class="dm-val${ev.shift?'':' empty'}">${ev.shift || 'Not specified'}</div></div>
+    </div>
+  </div>`;
+  document.getElementById('dayModalBg').classList.add('show');
+}
+
 // ============================================================
 //  GANTT TAB
 // ============================================================
@@ -1075,6 +1152,7 @@ function renderGantt() {
   ];
 
   let rowsHtml='';
+  ganttBarEvents = [];
   appData.fleets.forEach(f => {
     const fc=FLEET_COLORS[f.num]||'#1565C0';
     rowsHtml+=`<div class="gantt-row fleet-hdr-row">
@@ -1087,11 +1165,39 @@ function renderGantt() {
       const color=def.color||EV_COLORS[def.key]||'#9E9E9E';
       const l=pct(s), w=wPct(s,e||s);
       const barLabel = w>6 ? def.label : '';
+      // Resolve event "type" key for icon/color/shift lookup (strip trailing 2 from rigup variants)
+      const evType = def.key.replace(/2$/,'');
+      // Build the event payload to show in the modal on tap
+      const side = (def.key.startsWith('rigup') || def.key === 'roustabout2' || def.key === 'misc2') ? f.rigUp : f.rigDown;
+      let shift = '';
+      if (def.key === 'roustabout' || def.key === 'roustabout2') {
+        const r = side.roustabout || {};
+        const parts = [];
+        if (r.dayShift)   parts.push('DAY SHIFT ☀️'  + (r.dayQty?  ' ('+r.dayQty+  ' techs)':''));
+        if (r.nightShift) parts.push('NIGHT SHIFT 🌙' + (r.nightQty?' ('+r.nightQty+' techs)':''));
+        shift = parts.join(' · ');
+      } else {
+        const parts = [];
+        if (side.dayShift)   parts.push('DAY SHIFT ☀️');
+        if (side.nightShift) parts.push('NIGHT SHIFT 🌙');
+        if (side.hotel)      parts.push('HOTEL 🏨');
+        shift = parts.join(' · ');
+      }
+      const barIdx = ganttBarEvents.length;
+      ganttBarEvents.push({
+        type: evType,
+        label: def.label,
+        start: s, end: e || s,
+        loc: side.location, pad: side.pad,
+        shift: shift,
+        fleetNum: f.num,
+        fleetName: f.shortName
+      });
       rowsHtml+=`<div class="gantt-row">
-        <div class="gantt-row-lbl" style="padding-left:24px;font-size:11px">${def.label}</div>
+        <div class="gantt-row-lbl gantt-row-lbl-sub" style="padding-left:24px;font-size:11px">${def.label}</div>
         <div class="gantt-track">
           ${todayLine}
-          <div class="gantt-bar" style="left:${l}%;width:${w}%;background:${color}" title="Fleet #${f.num}: ${def.label} | ${fmtRange(s,e)||s}">${barLabel}</div>
+          <div class="gantt-bar" data-bar-idx="${barIdx}" onclick="openGanttBarDetail(${barIdx})" style="left:${l}%;width:${w}%;background:${color}" title="Fleet #${f.num}: ${def.label} | ${fmtRange(s,e)||s}">${barLabel}</div>
         </div>
       </div>`;
     });
