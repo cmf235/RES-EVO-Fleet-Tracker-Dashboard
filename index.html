@@ -444,6 +444,11 @@
     }
     .dm-val { font-size: 13px; word-break: break-word; }
     .dm-val.empty { color: var(--text-secondary); font-style: italic; font-size: 12px; }
+    .dm-time {
+      display: inline-block; margin-left: 8px;
+      color: var(--text-secondary); font-size: 12px; font-weight: 600;
+      background: var(--surface2); padding: 1px 8px; border-radius: 8px;
+    }
     .day-modal-empty { color: var(--text-secondary); font-size: 13px; text-align: center; padding: 16px 0; }
 
     /* ===== RESPONSIVE ===== */
@@ -816,14 +821,14 @@ function collectEvents(f) {
   }
   const rdShift = shiftStr(rd);
   const ruShift = shiftStr(ru);
-  if (rd.date)           ev.push({type:'rigdown',     label:'Rig Down',      start:rd.date, end:rd.date, loc:rd.location, pad:rd.pad, shift:rdShift});
-  if (rd.logisticsDate)  ev.push({type:'rigdown_log', label:'RD Logistics',  start:rd.logisticsDate, end:rd.logisticsDate, loc:rd.location, pad:rd.pad, shift:rdShift});
-  if (rd.roustabout&&rd.roustabout.start) ev.push({type:'roustabout', label:'RD Roustabout', start:rd.roustabout.start, end:rd.roustabout.end||rd.roustabout.start, loc:rd.location, pad:rd.pad, shift:roustShiftStr(rd.roustabout)});
-  if (rd.misc&&rd.misc.start)             ev.push({type:'misc',       label:'RD Misc',        start:rd.misc.start,       end:rd.misc.end||rd.misc.start, loc:rd.location, pad:rd.pad, shift:rdShift});
-  if (ru.date)           ev.push({type:'rigup',       label:'Rig Up',        start:ru.date, end:ru.date, loc:ru.location, pad:ru.pad, shift:ruShift});
-  if (ru.logisticsDate)  ev.push({type:'rigup_log',   label:'RU Logistics',  start:ru.logisticsDate, end:ru.logisticsDate, loc:ru.location, pad:ru.pad, shift:ruShift});
-  if (ru.roustabout&&ru.roustabout.start) ev.push({type:'roustabout', label:'RU Roustabout', start:ru.roustabout.start, end:ru.roustabout.end||ru.roustabout.start, loc:ru.location, pad:ru.pad, shift:roustShiftStr(ru.roustabout)});
-  if (ru.misc&&ru.misc.start)             ev.push({type:'misc',       label:'RU Misc',        start:ru.misc.start,       end:ru.misc.end||ru.misc.start, loc:ru.location, pad:ru.pad, shift:ruShift});
+  if (rd.date)           ev.push({type:'rigdown',     label:'Rig Down',      start:rd.date, end:rd.date, time:rd.time, loc:rd.location, pad:rd.pad, shift:rdShift});
+  if (rd.logisticsDate)  ev.push({type:'rigdown_log', label:'RD Logistics',  start:rd.logisticsDate, end:rd.logisticsDate, time:rd.logisticsTime, loc:rd.location, pad:rd.pad, shift:rdShift});
+  if (rd.roustabout&&rd.roustabout.start) ev.push({type:'roustabout', label:'RD Roustabout', start:rd.roustabout.start, end:rd.roustabout.end||rd.roustabout.start, time:rd.roustabout.startTime, loc:rd.location, pad:rd.pad, shift:roustShiftStr(rd.roustabout)});
+  if (rd.misc&&rd.misc.start)             ev.push({type:'misc',       label:'RD Misc',        start:rd.misc.start,       end:rd.misc.end||rd.misc.start, time:rd.misc.startTime, loc:rd.location, pad:rd.pad, shift:rdShift});
+  if (ru.date)           ev.push({type:'rigup',       label:'Rig Up',        start:ru.date, end:ru.date, time:ru.time, loc:ru.location, pad:ru.pad, shift:ruShift});
+  if (ru.logisticsDate)  ev.push({type:'rigup_log',   label:'RU Logistics',  start:ru.logisticsDate, end:ru.logisticsDate, time:ru.logisticsTime, loc:ru.location, pad:ru.pad, shift:ruShift});
+  if (ru.roustabout&&ru.roustabout.start) ev.push({type:'roustabout', label:'RU Roustabout', start:ru.roustabout.start, end:ru.roustabout.end||ru.roustabout.start, time:ru.roustabout.startTime, loc:ru.location, pad:ru.pad, shift:roustShiftStr(ru.roustabout)});
+  if (ru.misc&&ru.misc.start)             ev.push({type:'misc',       label:'RU Misc',        start:ru.misc.start,       end:ru.misc.end||ru.misc.start, time:ru.misc.startTime, loc:ru.location, pad:ru.pad, shift:ruShift});
   return ev;
 }
 
@@ -1027,6 +1032,7 @@ function openDayDetail(ds) {
       const dt = (ev.start && ev.end && ev.start !== ev.end)
                   ? fmtRange(ev.start, ev.end)
                   : (fmt(ev.start) || ev.start);
+      const timePart = ev.time ? `<span class="dm-time">⏰ ${esc(ev.time)}</span>` : '';
       return `<div class="dm-event">
         <div class="dm-bar" style="background:${c}"></div>
         <div class="dm-body">
@@ -1038,7 +1044,7 @@ function openDayDetail(ds) {
           <div class="dm-row"><div class="dm-lbl">Location & Pad</div>
             <div class="dm-val${locPad?'':' empty'}">${locPad ? esc(locPad) : 'Not specified'}</div></div>
           <div class="dm-row"><div class="dm-lbl">Date & Time</div>
-            <div class="dm-val">${dt || ''}</div></div>
+            <div class="dm-val">${dt || ''}${timePart}</div></div>
           <div class="dm-row"><div class="dm-lbl">Shift</div>
             <div class="dm-val${ev.shift?'':' empty'}">${ev.shift || 'Not specified'}</div></div>
         </div>
@@ -1070,6 +1076,7 @@ function openGanttBarDetail(idx) {
   const dt = (ev.start && ev.end && ev.start !== ev.end)
               ? fmtRange(ev.start, ev.end)
               : (fmt(ev.start) || ev.start);
+  const timePart = ev.time ? `<span class="dm-time">⏰ ${esc(ev.time)}</span>` : '';
   document.getElementById('dayModalTitle').textContent = `Fleet #${ev.fleetNum} · ${ev.fleetName||''}`.trim();
   document.getElementById('dayModalBody').innerHTML = `<div class="dm-event">
     <div class="dm-bar" style="background:${c}"></div>
@@ -1082,7 +1089,7 @@ function openGanttBarDetail(idx) {
       <div class="dm-row"><div class="dm-lbl">Location & Pad</div>
         <div class="dm-val${locPad?'':' empty'}">${locPad ? esc(locPad) : 'Not specified'}</div></div>
       <div class="dm-row"><div class="dm-lbl">Date & Time</div>
-        <div class="dm-val">${dt || ''}</div></div>
+        <div class="dm-val">${dt || ''}${timePart}</div></div>
       <div class="dm-row"><div class="dm-lbl">Shift</div>
         <div class="dm-val${ev.shift?'':' empty'}">${ev.shift || 'Not specified'}</div></div>
     </div>
@@ -1183,11 +1190,20 @@ function renderGantt() {
         if (side.hotel)      parts.push('HOTEL 🏨');
         shift = parts.join(' · ');
       }
+      // Resolve the matching time field for this event def
+      let timeVal = '';
+      if (def.key === 'rigdown')          timeVal = side.time;
+      else if (def.key === 'rigdown_log') timeVal = side.logisticsTime;
+      else if (def.key === 'rigup')       timeVal = side.time;
+      else if (def.key === 'rigup_log')   timeVal = side.logisticsTime;
+      else if (def.key === 'roustabout' || def.key === 'roustabout2') timeVal = (side.roustabout && side.roustabout.startTime) || '';
+      else if (def.key === 'misc' || def.key === 'misc2')             timeVal = (side.misc && side.misc.startTime) || '';
       const barIdx = ganttBarEvents.length;
       ganttBarEvents.push({
         type: evType,
         label: def.label,
         start: s, end: e || s,
+        time: timeVal,
         loc: side.location, pad: side.pad,
         shift: shift,
         fleetNum: f.num,
