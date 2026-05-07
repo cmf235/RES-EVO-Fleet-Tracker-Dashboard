@@ -259,8 +259,10 @@
     .cal-dow { background: var(--nav-bg); color: rgba(255,255,255,0.9); text-align: center; padding: 8px 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
     .cal-cell {
       background: var(--surface); min-height: 88px; padding: 5px 4px;
-      position: relative;
+      position: relative; cursor: pointer;
+      transition: background 0.12s;
     }
+    .cal-cell:hover:not(.other-month) { background: var(--surface2); }
     .cal-cell.other-month { background: var(--surface2); }
     .cal-cell.other-month .cal-day-num { opacity: 0.35; }
     .cal-cell.cal-today { background: var(--primary-light); }
@@ -350,46 +352,64 @@
     .no-data-icon { font-size: 40px; margin-bottom: 10px; }
     .no-data p { font-size: 14px; }
 
-    /* ===== DAY DETAIL MODAL (mobile tap-to-view) ===== */
+    /* ===== DAY DETAIL MODAL (click any day) ===== */
     .day-modal-bg {
       display: none; position: fixed; inset: 0;
       background: rgba(0,0,0,0.5); z-index: 500;
-      align-items: flex-end; justify-content: center;
+      align-items: center; justify-content: center;
+      padding: 20px;
     }
     .day-modal-bg.show { display: flex; }
     .day-modal {
       background: var(--surface); color: var(--text);
-      width: 100%; max-width: 480px;
-      max-height: 80vh; overflow-y: auto;
-      border-radius: 16px 16px 0 0;
-      padding: 16px 18px 24px;
-      box-shadow: 0 -4px 16px rgba(0,0,0,0.25);
-      animation: slideUp 0.2s ease;
+      width: 100%; max-width: 580px;
+      max-height: 85vh; overflow-y: auto;
+      border-radius: 12px;
+      padding: 18px 22px 22px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      animation: fadeInScale 0.18s ease;
     }
+    @keyframes fadeInScale { from { opacity: 0; transform: translateY(6px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
     .day-modal-hdr {
       display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 12px;
+      border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 14px;
     }
-    .day-modal-title { font-size: 16px; font-weight: 700; }
+    .day-modal-title { font-size: 17px; font-weight: 700; }
     .day-modal-close {
       background: var(--surface2); border: none; color: var(--text);
       width: 32px; height: 32px; border-radius: 50%;
       font-size: 20px; cursor: pointer; line-height: 1;
     }
-    .day-modal-ev {
-      display: flex; align-items: flex-start; gap: 10px;
-      padding: 10px 0; border-bottom: 1px solid var(--border);
-      font-size: 13px;
+    .day-modal-close:hover { background: var(--border); }
+    .dm-event {
+      display: flex; gap: 12px; padding: 12px 0;
+      border-bottom: 1px solid var(--border);
     }
-    .day-modal-ev:last-child { border-bottom: none; }
-    .day-modal-ev .ev-bar {
-      width: 4px; align-self: stretch; border-radius: 2px; flex-shrink: 0;
+    .dm-event:last-child { border-bottom: none; padding-bottom: 4px; }
+    .dm-event:first-child { padding-top: 4px; }
+    .dm-bar { width: 5px; border-radius: 3px; flex-shrink: 0; align-self: stretch; }
+    .dm-body { flex: 1; min-width: 0; }
+    .dm-title {
+      font-size: 14px; font-weight: 700; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
     }
-    .day-modal-ev .ev-text { flex: 1; }
-    .day-modal-ev .ev-fleet { font-weight: 700; color: var(--primary); }
-    .day-modal-ev .ev-meta { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
-    .day-modal-empty { color: var(--text-secondary); font-size: 13px; text-align: center; padding: 12px 0; }
+    .dm-fleet-tag {
+      font-size: 11px; font-weight: 700;
+      background: var(--surface2); color: var(--text-secondary);
+      padding: 2px 8px; border-radius: 10px; margin-left: auto;
+    }
+    .dm-row {
+      display: grid; grid-template-columns: 110px 1fr;
+      gap: 8px; padding: 4px 0; align-items: baseline;
+    }
+    .dm-lbl {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.4px; color: var(--text-secondary);
+    }
+    .dm-val { font-size: 13px; word-break: break-word; }
+    .dm-val.empty { color: var(--text-secondary); font-style: italic; font-size: 12px; }
+    .day-modal-empty { color: var(--text-secondary); font-size: 13px; text-align: center; padding: 16px 0; }
 
     /* ===== RESPONSIVE ===== */
     @media (max-width: 640px) {
@@ -399,6 +419,19 @@
       .cards-grid { grid-template-columns: 1fr; }
       .stats-row { grid-template-columns: repeat(2, 1fr); }
       .last-updated { display: none; }
+
+      /* Day modal becomes a bottom sheet on mobile */
+      .day-modal-bg { align-items: flex-end; padding: 0; }
+      .day-modal {
+        max-width: 100%; max-height: 85vh;
+        border-radius: 16px 16px 0 0;
+        padding: 16px 18px 24px;
+        animation: slideUp 0.2s ease;
+        box-shadow: 0 -4px 16px rgba(0,0,0,0.25);
+      }
+      .dm-row { grid-template-columns: 92px 1fr; }
+      .dm-lbl { font-size: 9px; }
+      .dm-val { font-size: 12.5px; }
 
       /* Calendar controls fit one row */
       .cal-controls { gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
@@ -708,14 +741,31 @@ function esc(s) {
 function collectEvents(f) {
   const ev = [];
   const rd = f.rigDown, ru = f.rigUp;
-  if (rd.date)           ev.push({type:'rigdown',     label:'Rig Down',      start:rd.date, end:rd.date, loc:rd.location, pad:rd.pad});
-  if (rd.logisticsDate)  ev.push({type:'rigdown_log', label:'RD Logistics',  start:rd.logisticsDate, end:rd.logisticsDate, loc:rd.location, pad:rd.pad});
-  if (rd.roustabout&&rd.roustabout.start) ev.push({type:'roustabout', label:'RD Roustabout', start:rd.roustabout.start, end:rd.roustabout.end||rd.roustabout.start, loc:rd.location, pad:rd.pad});
-  if (rd.misc&&rd.misc.start)             ev.push({type:'misc',       label:'RD Misc',        start:rd.misc.start,       end:rd.misc.end||rd.misc.start, loc:rd.location, pad:rd.pad});
-  if (ru.date)           ev.push({type:'rigup',       label:'Rig Up',        start:ru.date, end:ru.date, loc:ru.location, pad:ru.pad});
-  if (ru.logisticsDate)  ev.push({type:'rigup_log',   label:'RU Logistics',  start:ru.logisticsDate, end:ru.logisticsDate, loc:ru.location, pad:ru.pad});
-  if (ru.roustabout&&ru.roustabout.start) ev.push({type:'roustabout', label:'RU Roustabout', start:ru.roustabout.start, end:ru.roustabout.end||ru.roustabout.start, loc:ru.location, pad:ru.pad});
-  if (ru.misc&&ru.misc.start)             ev.push({type:'misc',       label:'RU Misc',        start:ru.misc.start,       end:ru.misc.end||ru.misc.start, loc:ru.location, pad:ru.pad});
+  // Build shift descriptors for each side
+  function shiftStr(side) {
+    const parts = [];
+    if (side.dayShift)   parts.push('DAY SHIFT ☀️');
+    if (side.nightShift) parts.push('NIGHT SHIFT 🌙');
+    if (side.hotel)      parts.push('HOTEL 🏨');
+    return parts.join(' · ');
+  }
+  function roustShiftStr(r) {
+    if (!r) return '';
+    const parts = [];
+    if (r.dayShift)   parts.push('DAY SHIFT ☀️'  + (r.dayQty?  ' ('+r.dayQty+  ' techs)':''));
+    if (r.nightShift) parts.push('NIGHT SHIFT 🌙' + (r.nightQty?' ('+r.nightQty+' techs)':''));
+    return parts.join(' · ');
+  }
+  const rdShift = shiftStr(rd);
+  const ruShift = shiftStr(ru);
+  if (rd.date)           ev.push({type:'rigdown',     label:'Rig Down',      start:rd.date, end:rd.date, loc:rd.location, pad:rd.pad, shift:rdShift});
+  if (rd.logisticsDate)  ev.push({type:'rigdown_log', label:'RD Logistics',  start:rd.logisticsDate, end:rd.logisticsDate, loc:rd.location, pad:rd.pad, shift:rdShift});
+  if (rd.roustabout&&rd.roustabout.start) ev.push({type:'roustabout', label:'RD Roustabout', start:rd.roustabout.start, end:rd.roustabout.end||rd.roustabout.start, loc:rd.location, pad:rd.pad, shift:roustShiftStr(rd.roustabout)});
+  if (rd.misc&&rd.misc.start)             ev.push({type:'misc',       label:'RD Misc',        start:rd.misc.start,       end:rd.misc.end||rd.misc.start, loc:rd.location, pad:rd.pad, shift:rdShift});
+  if (ru.date)           ev.push({type:'rigup',       label:'Rig Up',        start:ru.date, end:ru.date, loc:ru.location, pad:ru.pad, shift:ruShift});
+  if (ru.logisticsDate)  ev.push({type:'rigup_log',   label:'RU Logistics',  start:ru.logisticsDate, end:ru.logisticsDate, loc:ru.location, pad:ru.pad, shift:ruShift});
+  if (ru.roustabout&&ru.roustabout.start) ev.push({type:'roustabout', label:'RU Roustabout', start:ru.roustabout.start, end:ru.roustabout.end||ru.roustabout.start, loc:ru.location, pad:ru.pad, shift:roustShiftStr(ru.roustabout)});
+  if (ru.misc&&ru.misc.start)             ev.push({type:'misc',       label:'RU Misc',        start:ru.misc.start,       end:ru.misc.end||ru.misc.start, loc:ru.location, pad:ru.pad, shift:ruShift});
   return ev;
 }
 
@@ -890,28 +940,49 @@ function renderCalendar() {
   document.getElementById('calGrid').innerHTML = html;
 }
 
-// Day detail popup (used on mobile when event text is hidden)
+// Day detail popup (clicking any day opens it on desktop and mobile)
 let calDayEvents = {};
+const EV_ICONS = {
+  rigdown:     '🔻',
+  rigdown_log: '🚛',
+  rigup:       '🔺',
+  rigup_log:   '🚛',
+  roustabout:  '🔧',
+  misc:        '➕'
+};
 function openDayDetail(ds) {
-  // Only open the modal on small screens; desktop already shows event text in cells
-  if (window.innerWidth > 640) return;
   const evs = calDayEvents[ds] || [];
   const [yy, mm, dd] = ds.split('-').map(Number);
   const dateObj = new Date(yy, mm-1, dd);
   const dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][dateObj.getDay()];
-  document.getElementById('dayModalTitle').textContent = `${dayName}, ${MONTH_NAMES[mm-1]} ${dd}`;
+  document.getElementById('dayModalTitle').textContent = `${dayName}, ${MONTH_NAMES[mm-1]} ${dd}, ${yy}`;
   const body = document.getElementById('dayModalBody');
   if (!evs.length) {
-    body.innerHTML = '<div class="day-modal-empty">No events scheduled.</div>';
+    body.innerHTML = '<div class="day-modal-empty">No events scheduled for this day.</div>';
   } else {
-    body.innerHTML = evs.map(ev => {
+    const order = {rigdown:0, rigup:1, rigdown_log:2, rigup_log:3, roustabout:4, misc:5};
+    const sorted = evs.slice().sort((a,b)=> (a.fleetNum-b.fleetNum) || ((order[a.type]??9)-(order[b.type]??9)));
+    body.innerHTML = sorted.map(ev => {
       const c = EV_COLORS[ev.type]||'#9E9E9E';
-      const meta = [ev.loc, ev.pad].filter(Boolean).join(' · ');
-      return `<div class="day-modal-ev">
-        <div class="ev-bar" style="background:${c}"></div>
-        <div class="ev-text">
-          <div><span class="ev-fleet">Fleet #${ev.fleetNum}</span> · ${ev.label}</div>
-          ${meta ? `<div class="ev-meta">${meta}</div>` : ''}
+      const icon = EV_ICONS[ev.type] || '•';
+      const locPad = [ev.loc, ev.pad ? 'Pad '+ev.pad : ''].filter(Boolean).join(' · ');
+      const dt = (ev.start && ev.end && ev.start !== ev.end)
+                  ? fmtRange(ev.start, ev.end)
+                  : (fmt(ev.start) || ev.start);
+      return `<div class="dm-event">
+        <div class="dm-bar" style="background:${c}"></div>
+        <div class="dm-body">
+          <div class="dm-title" style="color:${c}">
+            <span style="font-size:16px">${icon}</span>
+            <span>${esc(ev.label)}</span>
+            <span class="dm-fleet-tag">FLEET #${ev.fleetNum}</span>
+          </div>
+          <div class="dm-row"><div class="dm-lbl">Location & Pad</div>
+            <div class="dm-val${locPad?'':' empty'}">${locPad ? esc(locPad) : 'Not specified'}</div></div>
+          <div class="dm-row"><div class="dm-lbl">Date & Time</div>
+            <div class="dm-val">${dt || ''}</div></div>
+          <div class="dm-row"><div class="dm-lbl">Shift</div>
+            <div class="dm-val${ev.shift?'':' empty'}">${ev.shift || 'Not specified'}</div></div>
         </div>
       </div>`;
     }).join('');
@@ -922,6 +993,13 @@ function closeDayModal(e) {
   if (e && e.target && !e.target.classList.contains('day-modal-bg') && e.type === 'click') return;
   document.getElementById('dayModalBg').classList.remove('show');
 }
+// Allow Escape to close the modal
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const bg = document.getElementById('dayModalBg');
+    if (bg && bg.classList.contains('show')) bg.classList.remove('show');
+  }
+});
 
 // ============================================================
 //  GANTT TAB
