@@ -916,10 +916,14 @@ function fleetErrorUI(){
 }
 
 function refreshData() {
-  const btn = document.getElementById('refreshBtn');
-  btn.classList.add('spinning');
   loadConsumables();
   loadIron();
+  loadFleets();
+}
+
+function loadFleets() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
 
   if (API_URL === 'PASTE_APPS_SCRIPT_URL_HERE') {
     setStatus('warning', '⚠️ Dashboard running in DEMO MODE — API_URL not yet configured. Real data will appear after the Apps Script Web App is deployed and the URL is pasted in.');
@@ -951,7 +955,7 @@ function refreshData() {
         // Initial load failed (e.g. cold Apps Script) — auto-retry with backoff.
         fleetTries++;
         setStatus('loading', '⏳ Reconnecting to live data… (attempt ' + fleetTries + ' of 3)');
-        setTimeout(refreshData, 3000 * fleetTries);
+        setTimeout(loadFleets, 3000 * fleetTries);
       } else {
         setStatus('error', '⚠️ Couldn’t reach live data right now.');
         fleetErrorUI();
@@ -1184,7 +1188,7 @@ function parseTotals_(rows){
   var out=[];
   rows.forEach(function(r){
     var desc=(r[1]||'').trim(), val=(r[2]||'').trim();
-    if(!desc || /description/i.test(desc) || val==='' || isNaN(parseFloat(val))) return;
+    if(!desc || /description/i.test(desc) || ironJunk_(desc) || val==='' || isNaN(parseFloat(val))) return;
     out.push({ state:desc, value:ironNum(r[2]) });
   });
   return out;
@@ -1569,6 +1573,7 @@ function setCalFleet(v){ calFleetFilter = v; renderCalendar(); }
 function computeConflictDates(){
   var set = {};
   if (!appData) return set;
+  var flt = calFleetFilter ? String(calFleetFilter) : '';
   var rig = [], roust = [];
   appData.fleets.forEach(function(f){
     collectEvents(f).forEach(function(e){
@@ -1577,9 +1582,11 @@ function computeConflictDates(){
     });
   });
   for (var i=0;i<rig.length;i++) for (var j=i+1;j<rig.length;j++)
-    if (String(rig[i].fleet)!==String(rig[j].fleet) && rig[i].start===rig[j].start) set[rig[i].start]=1;
+    if (String(rig[i].fleet)!==String(rig[j].fleet) && rig[i].start===rig[j].start
+        && (!flt || String(rig[i].fleet)===flt || String(rig[j].fleet)===flt)) set[rig[i].start]=1;
   for (var a=0;a<roust.length;a++) for (var b=a+1;b<roust.length;b++){
     if (String(roust[a].fleet)===String(roust[b].fleet)) continue;
+    if (flt && String(roust[a].fleet)!==flt && String(roust[b].fleet)!==flt) continue;
     var oS = roust[a].start>roust[b].start?roust[a].start:roust[b].start;
     var oE = roust[a].end<roust[b].end?roust[a].end:roust[b].end;
     if (oS<=oE){ var c=parseDate(oS), e=parseDate(oE); while(c&&e&&c<=e){ set[c.getFullYear()+'-'+pad2(c.getMonth()+1)+'-'+pad2(c.getDate())]=1; c.setDate(c.getDate()+1); } }
