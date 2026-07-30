@@ -33,6 +33,8 @@
       --misc: #E65100;
       --misc-bg: #FFF3E0;
       --cal-line: #a8b0bd;
+      --inv-green: #1a7f37;
+      --good: #1a7f37; --alert: #C62828; --caution: #B26A00; --ctx: #6b7280; --heat-rgb: 21,101,192;
     }
     [data-theme="dark"] {
       --bg: #0f1117;
@@ -53,6 +55,8 @@
       --roustabout-bg: #1f0d2e;
       --misc-bg: #2a1a00;
       --cal-line: #5d6478;
+      --inv-green: #3fb950;
+      --good: #3fb950; --alert: #f47174; --caution: #e3a008; --ctx: #8892a4; --heat-rgb: 96,165,250;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -393,6 +397,165 @@
     .detail-val.empty { color: var(--text-secondary); font-style: italic; font-weight: 400; font-size: 13px; }
 
     .sub-header { padding: 8px 18px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-secondary); background: var(--surface2); border-bottom: 1px solid var(--border); }
+    /* ===== RIG UP DRAWING + CERTIFICATION PACKET ===== */
+    .fleet-files-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; align-items: start; }
+    .ff-col { display: flex; flex-direction: column; gap: 20px; }
+    @media (max-width: 780px) { .fleet-files-grid { grid-template-columns: 1fr; } }
+    .sc-header.drawing { background: var(--primary-light); border-bottom-color: var(--primary); color: var(--primary); }
+    .sc-header.cert    { background: var(--roustabout-bg); border-bottom-color: var(--roustabout); color: var(--roustabout); }
+    .file-body { padding: 16px 18px; }
+    .file-dropzone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 26px 16px; text-align: center; cursor: pointer; color: var(--text-secondary); font-size: 13px; background: var(--surface2); transition: border-color .15s, color .15s; }
+    .file-dropzone:hover { border-color: var(--primary); color: var(--primary); }
+    .file-dropzone .dz-icon { font-size: 30px; display: block; margin-bottom: 8px; }
+    .drawing-preview img { width: 100%; max-height: 360px; object-fit: contain; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface2); display: block; }
+    .drawing-preview .change-hint { text-align: center; font-size: 11px; color: var(--text-secondary); margin-top: 6px; cursor: pointer; }
+    .drawing-preview .change-hint:hover { color: var(--primary); }
+    .file-empty { border: 2px dashed var(--border); border-radius: var(--radius); padding: 26px 16px; text-align: center; color: var(--text-secondary); font-size: 13px; background: var(--surface2); }
+    .file-empty .dz-icon { font-size: 30px; display: block; margin-bottom: 8px; opacity: .55; }
+    .file-linked { display: flex; align-items: center; gap: 10px; padding: 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; font-weight: 600; color: var(--text); }
+    .file-linked .dz-icon { font-size: 22px; }
+    .drawing-preview.broken img { display: none; }
+    .drawing-preview.broken::after { content: 'Drawing link couldn’t load'; display: block; padding: 24px; text-align: center; color: var(--text-secondary); font-size: 12px; border: 2px dashed var(--border); border-radius: var(--radius); background: var(--surface2); }
+    .pad-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 18px; margin-bottom: 20px; }
+    .pad-box-title { font-size: 11px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 10px; }
+    .pad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 560px) { .pad-grid { grid-template-columns: 1fr; } }
+    .pad-cell { border-left: 4px solid var(--ctx); padding: 9px 14px; background: var(--surface2); border-radius: 8px; }
+    .pad-cell.current { border-left-color: var(--rigdown); }
+    .pad-cell.next { border-left-color: var(--rigup); }
+    .pad-cell-lbl { font-size: 10px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--text-secondary); }
+    .pad-cell-pad { font-size: 20px; font-weight: 800; line-height: 1.15; margin-top: 3px; }
+    .pad-cell-sub { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+    .pad-empty { color: var(--text-secondary); font-weight: 400; font-size: 15px; }
+    .pad-x-wrap { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border); display: grid; gap: 5px; }
+    .pad-x { display: grid; grid-template-columns: 64px 1fr; gap: 8px; align-items: baseline; font-size: 12px; }
+    .pad-x-lbl { font-size: 10px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--text-secondary); }
+    .pad-x-val { color: var(--text); word-break: break-word; }
+    .pad-x-val a { color: var(--rigup); font-weight: 700; text-decoration: none; }
+    .pad-x-val a:hover { text-decoration: underline; }
+    .pad-cell.current .pad-x-val a { color: var(--rigdown); }
+    .pad-x-val.gps { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; }
+    .file-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; font-size: 13px; }
+    .file-row .file-name { font-weight: 600; word-break: break-all; }
+    .file-row .file-name.empty { font-weight: 400; font-style: italic; color: var(--text-secondary); }
+    .file-btn-row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+    .file-btn { flex: 1 1 auto; min-width: 150px; text-align: center; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--primary); background: var(--primary); color: #fff; font-weight: 600; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .file-btn.secondary { background: transparent; color: var(--primary); }
+    .file-btn.disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
+    .file-link-btn { background: none; border: none; color: var(--primary); font-weight: 600; font-size: 12px; cursor: pointer; padding: 0; text-decoration: underline; white-space: nowrap; }
+    .file-status { margin-top: 8px; font-size: 12px; color: var(--text-secondary); min-height: 14px; }
+    .file-note code { background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-size: 11px; }
+    .file-note { margin-top: 14px; font-size: 11px; color: var(--misc); background: var(--misc-bg); border-radius: 6px; padding: 8px 12px; line-height: 1.5; }
+    /* ===== CONSUMABLES INVENTORY ===== */
+    .inv-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+    .inv-title { font-size: 20px; font-weight: 800; }
+    .inv-sub { margin-top: 6px; }
+    .inv-banner { display: inline-block; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px; }
+    .inv-banner.ok { color: var(--rigup); background: var(--rigup-bg); }
+    .inv-banner.warn { color: var(--misc); background: var(--misc-bg); }
+    .inv-stats { display: flex; gap: 12px; }
+    .inv-stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 18px; text-align: center; box-shadow: var(--shadow); min-width: 96px; }
+    .inv-stat-num { font-size: 24px; font-weight: 800; line-height: 1.1; }
+    .inv-stat-lbl { font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--text-secondary); margin-top: 2px; }
+    .inv-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .inv-table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--surface); }
+    .inv-table th { position: sticky; top: 0; background: var(--header-bg); color: var(--header-text); font-size: 10px; text-transform: uppercase; letter-spacing: .5px; padding: 10px 12px; text-align: left; white-space: nowrap; z-index: 1; }
+    .inv-table th:nth-child(n+3) { text-align: center; }
+    .inv-table td { padding: 9px 12px; border-top: 1px solid var(--border); vertical-align: top; }
+    .inv-table tbody tr:hover { background: var(--surface2); }
+    .inv-table tr.inv-low { background: var(--rigdown-bg); }
+    .inv-table td.inv-need { color: var(--rigdown); font-weight: 800; }
+    .inv-table td.inv-onhand { color: var(--inv-green); font-weight: 800; }
+    .inv-table th.inv-onhand { color: #56d364; font-weight: 800; }
+    /* ===== IRON INVENTORY TRACKER ===== */
+    .inv-table td.ic, .inv-table th.ic { text-align: center; }
+    .iron-subnav { display: flex; gap: 4px; flex-wrap: wrap; margin: 14px 0 16px; border-bottom: 2px solid var(--border); }
+    .iron-subtab { appearance: none; border: none; background: transparent; color: var(--text-secondary); font-weight: 700; font-size: 13px; padding: 9px 16px; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+    .iron-subtab:hover { color: var(--text); }
+    .iron-subtab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .iron-matrix td, .iron-matrix th { white-space: nowrap; }
+    .iron-matrix .iron-sticky { position: sticky; left: 0; z-index: 2; background: var(--surface); text-align: left; box-shadow: 1px 0 0 var(--border); }
+    .iron-matrix thead .iron-sticky { background: var(--header-bg); color: var(--header-text); z-index: 3; }
+    .iron-matrix .iron-type { font-weight: 600; }
+    .iron-fleet { padding: 0 !important; text-align: center; }
+    .iron-fleet-name { display: block; background: var(--primary); color: #fff; padding: 7px 12px; font-size: 12px; font-weight: 800; }
+    .iron-fleet-pad { display: block; background: var(--rigup); color: #fff; padding: 4px 12px; font-size: 11px; font-weight: 600; }
+    .iron-c { text-align: center; color: var(--text-secondary); }
+    .iron-c.iron-pos { color: var(--text); font-weight: 800; }
+    .iron-barcell { width: 24%; min-width: 120px; }
+    .iron-bar-wrap { background: var(--surface2); border-radius: 4px; height: 15px; overflow: hidden; display: flex; min-width: 8px; }
+    .iron-seg { height: 100%; }
+    .iron-zero { color: var(--text-secondary); font-size: 11px; }
+    .iron-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; font-size: 12px; }
+    .iron-leg { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); font-weight: 600; }
+    .iron-dot { width: 11px; height: 11px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
+    .iron-overview { display: flex; gap: 32px; align-items: center; flex-wrap: wrap; justify-content: center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); margin-bottom: 18px; }
+    .iron-donut { position: relative; width: 180px; height: 180px; flex-shrink: 0; }
+    .iron-donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .iron-donut-num { font-size: 34px; font-weight: 800; line-height: 1; }
+    .iron-donut-lbl { font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--text-secondary); margin-top: 3px; }
+    .iron-tot-legend { min-width: 250px; }
+    .iron-tot-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .iron-tot-row:last-child { border-bottom: none; }
+    .iron-tot-state { flex: 1; font-weight: 600; }
+    .iron-tot-val { font-weight: 800; min-width: 44px; text-align: right; }
+    .iron-tot-pct { color: var(--text-secondary); min-width: 52px; text-align: right; font-size: 12px; }
+    .iron-tbl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    @media (max-width: 820px) { .iron-tbl-grid { grid-template-columns: 1fr; } }
+    .iron-tbl-title { font-weight: 800; font-size: 14px; margin-bottom: 8px; }
+
+    /* ===== SKILL-DRIVEN ENHANCEMENTS (KPI cards, insight, filter, heatmap, ranked bars) ===== */
+    .kpi-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .kpi-card { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--ctx); border-radius: var(--radius); padding: 12px 16px; box-shadow: var(--shadow); }
+    .kpi-card.primary { border-left-color: var(--primary); }
+    .kpi-card.good { border-left-color: var(--good); }
+    .kpi-card.alert { border-left-color: var(--alert); }
+    .kpi-card.caution { border-left-color: var(--caution); }
+    .kpi-val { font-size: 28px; font-weight: 800; line-height: 1.05; }
+    .kpi-card.good .kpi-val { color: var(--good); }
+    .kpi-card.alert .kpi-val { color: var(--alert); }
+    .kpi-card.caution .kpi-val { color: var(--caution); }
+    .kpi-card.primary .kpi-val { color: var(--primary); }
+    .kpi-lbl { font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--text-secondary); margin-top: 3px; }
+    .kpi-sub { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+    .inv-insight { font-size: 13px; color: var(--text-secondary); margin: -4px 0 14px; }
+    .inv-insight b { color: var(--text); font-weight: 800; }
+    .inv-cap { font-size: 11px; color: var(--text-secondary); margin-top: 8px; }
+    .inv-tools { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+    .inv-search { flex: 1; min-width: 180px; max-width: 320px; padding: 7px 11px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); font-size: 13px; }
+    .inv-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text-secondary); cursor: pointer; user-select: none; white-space: nowrap; }
+    .inv-count { font-size: 11px; color: var(--text-secondary); margin-left: auto; }
+    .iron-heat-num { font-weight: 700; }
+    .iron-total-col { font-weight: 800; background: var(--surface2); }
+    .rank-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px 10px; box-shadow: var(--shadow); margin-bottom: 18px; }
+    .rank-row { display: grid; grid-template-columns: 128px 1fr 96px; align-items: center; gap: 12px; padding: 7px 0; }
+    .rank-lbl { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+    .rank-track { background: var(--surface2); border-radius: 5px; height: 22px; overflow: hidden; }
+    .rank-fill { height: 100%; border-radius: 5px 0 0 5px; min-width: 2px; }
+    .rank-val { font-size: 13px; font-weight: 800; text-align: right; }
+    .rank-val span { color: var(--text-secondary); font-weight: 600; font-size: 12px; }
+    @media (max-width: 560px) { .rank-row { grid-template-columns: 100px 1fr 78px; gap: 8px; } }
+
+    /* ===== SCHEDULE-TAB SKILL PASS (summary/calendar/fleet) ===== */
+    .fleet-insight { font-size: 13px; color: var(--text-secondary); margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .fleet-insight b { color: var(--text); font-weight: 800; }
+    .svc-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 18px 6px; }
+    .svc-chip { font-size: 12px; font-weight: 600; padding: 4px 11px; border-radius: 14px; background: var(--primary-light); color: var(--primary); border: 1px solid transparent; white-space: nowrap; }
+    .svc-chip .svc-qty { font-weight: 800; margin-left: 5px; }
+    .svc-chip.off { background: transparent; color: var(--text-secondary); border-color: var(--border); font-weight: 500; opacity: .85; }
+    .cal-summary { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; margin-bottom: 14px; padding: 11px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .cs-item { display: inline-flex; align-items: baseline; gap: 6px; font-size: 13px; }
+    .cs-num { font-weight: 800; font-size: 18px; line-height: 1; }
+    .cs-num.good { color: var(--good); } .cs-num.alert { color: var(--alert); } .cs-num.primary { color: var(--primary); }
+    .cs-lbl { color: var(--text-secondary); }
+    .cal-filter { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+    .cal-filter select { padding: 5px 9px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); font-size: 12px; font-weight: 600; cursor: pointer; }
+    .cal-cell.cal-conflict:not(.other-month) { background: var(--rigdown-bg); }
+    .cal-cell.cal-conflict::after { content: '\26A0'; position: absolute; top: 3px; right: 4px; font-size: 9px; color: #fff; background: var(--alert); width: 15px; height: 15px; border-radius: 50%; display: flex; align-items: center; justify-content: center; line-height: 1; }
+
+    @media (max-width: 640px) { .inv-head { flex-direction: column; } }
+
+
 
     /* ===== NO DATA ===== */
     .no-data { text-align: center; padding: 48px 20px; color: var(--text-secondary); }
@@ -580,13 +743,13 @@
 <nav class="nav" id="mainNav">
   <div class="nav-tab active" data-panel="summary"  onclick="showPanel('summary')">📊 Weekly Summary</div>
   <div class="nav-tab"        data-panel="calendar" onclick="showPanel('calendar')">📅 Calendar</div>
-  <div class="nav-tab"        data-panel="gantt"    onclick="showPanel('gantt')">📈 Gantt Timeline</div>
-  <div class="nav-tab"        data-panel="fleet-1"  onclick="showPanel('fleet-1')"><span class="nav-dot" style="background:#1565C0"></span>Fleet #1</div>
   <div class="nav-tab"        data-panel="fleet-6"  onclick="showPanel('fleet-6')"><span class="nav-dot" style="background:#2E7D32"></span>Fleet #6</div>
   <div class="nav-tab"        data-panel="fleet-9"  onclick="showPanel('fleet-9')"><span class="nav-dot" style="background:#6A1B9A"></span>Fleet #9</div>
   <div class="nav-tab"        data-panel="fleet-10" onclick="showPanel('fleet-10')"><span class="nav-dot" style="background:#E65100"></span>Fleet #10</div>
   <div class="nav-tab"        data-panel="fleet-13" onclick="showPanel('fleet-13')"><span class="nav-dot" style="background:#00695C"></span>Fleet #13</div>
   <div class="nav-tab"        data-panel="fleet-15" onclick="showPanel('fleet-15')"><span class="nav-dot" style="background:#AD1457"></span>Fleet #15</div>
+  <div class="nav-tab"        data-panel="consumables" onclick="showPanel('consumables')">📦 Consumables Inventory</div>
+  <div class="nav-tab"        data-panel="iron" onclick="showPanel('iron')">🔧 Iron Inventory Tracker</div>
 </nav>
 
 <!-- ===== MAIN ===== -->
@@ -597,11 +760,12 @@
   <div class="panel active" id="panel-summary">
     <div class="conflict-banner" id="conflictBanner"></div>
     <div class="stats-row" id="statsRow">
-      <div class="stat-card"><div class="stat-num" style="color:#1B5E20">—</div><div class="stat-lbl">Active Now</div></div>
-      <div class="stat-card"><div class="stat-num" style="color:#E65100">—</div><div class="stat-lbl">Within 7 Days</div></div>
-      <div class="stat-card"><div class="stat-num" style="color:#1565C0">6</div><div class="stat-lbl">Fleets</div></div>
-      <div class="stat-card"><div class="stat-num" style="color:#6b7280">—</div><div class="stat-lbl">Total Events</div></div>
+      <div class="kpi-card good"><div class="kpi-val">—</div><div class="kpi-lbl">Active Now</div></div>
+      <div class="kpi-card caution"><div class="kpi-val">—</div><div class="kpi-lbl">Within 7 Days</div></div>
+      <div class="kpi-card alert"><div class="kpi-val">—</div><div class="kpi-lbl">Conflicts</div></div>
+      <div class="kpi-card primary"><div class="kpi-val">—</div><div class="kpi-lbl">Fleets</div></div>
     </div>
+    <div class="inv-insight" id="summaryInsight"></div>
     <div class="legend">
       <div class="legend-item"><div class="legend-dot" style="background:#C62828"></div>Rig Down</div>
       <div class="legend-item"><div class="legend-dot" style="background:#E57373"></div>RD Logistics</div>
@@ -623,6 +787,7 @@
       <button class="cal-nav-btn" onclick="calNav(1)">›</button>
       <button class="cal-today-btn" onclick="calNav(0)">Today</button>
     </div>
+    <div class="cal-summary" id="calSummary"></div>
     <div class="legend">
       <div class="legend-item"><div class="legend-dot" style="background:#C62828"></div>Rig Down</div>
       <div class="legend-item"><div class="legend-dot" style="background:#E57373"></div>RD Logistics</div>
@@ -647,22 +812,14 @@
     </div>
   </div>
 
-  <!-- GANTT -->
-  <div class="panel" id="panel-gantt">
-    <div class="gantt-wrap">
-      <div class="gantt-inner" id="ganttInner">
-        <div class="no-data"><div class="no-data-icon">📈</div><p>Loading Gantt data…</p></div>
-      </div>
-    </div>
-  </div>
-
   <!-- FLEET PANELS -->
-  <div class="panel" id="panel-fleet-1"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
   <div class="panel" id="panel-fleet-6"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
   <div class="panel" id="panel-fleet-9"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
   <div class="panel" id="panel-fleet-10"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
   <div class="panel" id="panel-fleet-13"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
   <div class="panel" id="panel-fleet-15"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
+  <div class="panel" id="panel-consumables"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading inventory…</p></div></div>
+  <div class="panel" id="panel-iron"><div class="no-data"><div class="no-data-icon">🔧</div><p>Loading iron inventory…</p></div></div>
 </main>
 
 <script>
@@ -670,6 +827,15 @@
 //  CONFIG — Replace with your deployed Apps Script Web App URL
 // ============================================================
 const API_URL = 'https://script.google.com/macros/s/AKfycbxzRn4DcbgvNJm432aNPTYE91QWNlrA79s8KG_aMtgYTtbFRqh57l76l8fH_QMWHCqMUg/exec';
+const CONSUMABLES_CSV = 'https://docs.google.com/spreadsheets/d/1CMaUWBn1nuJBenNoPntFcLkxMsBP9N5r9pEaynnFyUE/export?format=csv&gid=1240111420';
+var IRON_SHEET = '1c91kuPxopI-aPNaRQHLgzvdpqHpU5aZqjqqA2sRuXqs';
+var IRON_TABS = { deployed:'783802398', rebuild:'1509964271', available:'1139183602', totals:'1875470645' };
+var IRON_COLORS = { Deployed:'#F4A62A', Complete:'#2E9E4F', Completed:'#2E9E4F', Paint:'#4A90D9', Rebuild:'#3949AB', Machine:'#00838F', 'Not Started':'#9AA0A6', Unstarted:'#9AA0A6' };
+var ironData = null;
+var ironSub = (typeof localStorage!=='undefined' && localStorage.getItem('evo-iron-sub')) || 'deployed';
+var consumHeaders = null, consumRows = null, consumSnapshot = false, consumErr = '', consumFilter = '', consumNeedOnly = false;
+var fleetTries = 0;
+const UPLOAD_URL = ''; // set to the deployed Apps Script upload endpoint (optional) to enable persistent, shared file storage
 
 // ============================================================
 //  CONSTANTS
@@ -714,9 +880,46 @@ let calYear, calMonth;
 // ============================================================
 //  DATA
 // ============================================================
+// Junk-value guard: sheet cells like "null" / "??" / "TBD" / "N/A" render as blank
+// instead of literally. Applied to the whole appData tree so every tab benefits,
+// and so empty guards (if (date)…, filter(Boolean)) correctly skip them.
+var JUNK_RE = /^(?:null|undefined|n\/a|tbd|-|—|\?+)$/i;
+function cleanVal(v){
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'string') return JUNK_RE.test(v.trim()) ? '' : v;
+  return v;
+}
+function sanitizeData(obj){
+  if (Array.isArray(obj)) { for (var i=0;i<obj.length;i++) obj[i] = sanitizeData(obj[i]); return obj; }
+  if (obj && typeof obj === 'object') { for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj,k)) obj[k] = sanitizeData(obj[k]); return obj; }
+  return cleanVal(obj);
+}
+
+// fetch with a hard timeout so a slow/unreachable source fails fast instead of
+// spinning forever. The underlying request may still settle; we ignore it.
+function fetchT(url, ms, opts){
+  return Promise.race([
+    fetch(url, opts || { cache:'no-store' }),
+    new Promise(function(_, rej){ setTimeout(function(){ rej(new Error('Request timed out')); }, ms || 12000); })
+  ]);
+}
+
+// Clean, actionable failure card for the schedule (never an eternal spinner).
+function fleetErrorUI(){
+  var el = document.getElementById('summaryCards');
+  if (el) el.innerHTML = '<div class="no-data" style="grid-column:1/-1">'
+    + '<div class="no-data-icon">&#128246;</div>'
+    + '<p style="margin-bottom:2px">Couldn’t reach the live schedule right now.</p>'
+    + '<p style="font-size:12px;color:var(--text-secondary)">Check the connection, then try again.</p>'
+    + '<button onclick="refreshData()" style="margin-top:14px;padding:8px 18px;border:1px solid var(--primary);background:var(--primary);color:#fff;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer">&#8635; Try again</button>'
+    + '</div>';
+}
+
 function refreshData() {
   const btn = document.getElementById('refreshBtn');
   btn.classList.add('spinning');
+  loadConsumables();
+  loadIron();
 
   if (API_URL === 'PASTE_APPS_SCRIPT_URL_HERE') {
     setStatus('warning', '⚠️ Dashboard running in DEMO MODE — API_URL not yet configured. Real data will appear after the Apps Script Web App is deployed and the URL is pasted in.');
@@ -725,20 +928,35 @@ function refreshData() {
     return;
   }
 
-  setStatus('loading', '⏳ Fetching live data from Google Sheets…');
-  fetch(API_URL)
+  setStatus('loading', '⏳ Loading live schedule…');
+  // Feed is heavy (Apps Script reads each fleet tab cell-by-cell, ~20s), so allow ample time.
+  fetchT(API_URL, 35000)
     .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(data => {
       if (data.error) throw new Error(data.error);
-      appData = data;
+      appData = sanitizeData(data);
+      fleetTries = 0;
       clearStatus();
       renderAll();
       const ts = new Date(data.lastUpdated);
-      document.getElementById('lastUpdated').innerHTML =
+      if (!isNaN(ts.getTime())) document.getElementById('lastUpdated').innerHTML =
         'Updated ' + ts.toLocaleDateString('en-US',{month:'short',day:'numeric'}) +
         ' ' + ts.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
     })
-    .catch(err => setStatus('error', '❌ ' + err.message + ' — check API_URL in the HTML file.'))
+    .catch(err => {
+      if (appData) {
+        // Data already on screen — keep showing it; the 5-min cycle will retry.
+        setStatus('warning', '⚠️ Showing last synced data — auto-refresh will retry shortly.');
+      } else if (fleetTries < 3) {
+        // Initial load failed (e.g. cold Apps Script) — auto-retry with backoff.
+        fleetTries++;
+        setStatus('loading', '⏳ Reconnecting to live data… (attempt ' + fleetTries + ' of 3)');
+        setTimeout(refreshData, 3000 * fleetTries);
+      } else {
+        setStatus('error', '⚠️ Couldn’t reach live data right now.');
+        fleetErrorUI();
+      }
+    })
     .finally(() => btn.classList.remove('spinning'));
 }
 
@@ -754,11 +972,371 @@ function clearStatus() {
 // ============================================================
 //  RENDER ALL
 // ============================================================
+// ============================================================
+//  CONSUMABLES INVENTORY  (live from Google Sheet, CSV export)
+// ============================================================
+var CONSUMABLES_HEADERS = ['PART NO#','DESCRIPTION','ON HAND','SAFTEY STOCK','NEED ORDERED','AMOUNT ORDERED BY EWS.','DATE'];
+// Fallback snapshot (read 2026-07-22) — shown only if the live sheet cannot be reached.
+var CONSUMABLES_SNAPSHOT = [
+  [`HC-315CR-3`,`LEGACY INLET POD FLANGE(old style), Crossover Flange, BFM 3”LL Flange x H4/D-hub`,`25`,`32`,`7`,`7`,`7/22/2026`],
+  [`MIC315CR-3-735`,`BIG BORE INLET FLANGES(Spiderman)`,`17`,`16`,`0`,``,``],
+  [`HCC-303001`,`3" CHECK VALVE (D-HUB)`,`31`,`16`,`0`,``,``],
+  [`HC-304215`,`3" 90'S`,`0`,`8`,`8`,`8`,`7/22/2026`],
+  [`FFC-700-10`,`7" MINOR REPAIR KITS`,`2`,`5`,`3`,`2`,`7/22/2026`],
+  [`HCC-303001-10`,`3" FLAPPER CHECK KITS`,`47`,`32`,`0`,``,``],
+  [`MIC315R-3K`,`INLET FLANGE KITS (OLD STYLE)`,`3`,`32`,`29`,`29`,`7/22/2026`],
+  [`MIC315CR-3-735K`,`BIG BORE INLET FLANGES(Spiderman)`,`32`,`16`,`0`,``,``],
+  [`HC-SEAL`,`DART SEAL POLYMER RERBUILD`,`0`,`200`,`200`,`200`,`7/22/2026`],
+  [`HC-SEAL KIT`,`DART SEAL (NEW)`,`75`,`50`,`0`,``,``],
+  [`HC-D4-SB`,`SINGLE BOLT CLAMPS`,`0`,`12`,`12`,`8`,`7/22/2026`],
+  [`RGSS316BX-156`,`BX-156 RING GASKETS`,`256`,`250`,`0`,``,``],
+  [`RGSS316BX-154`,`BX-154 RING GASKETS`,`150`,`100`,`0`,``,``],
+  [`HC-304220`,`CANNON BALL 90'S`,`0`,`8`,`8`,`6`,`7/22/2026`]
+];
+
+function parseCSV_(text) {
+  var rows=[], row=[], field='', q=false;
+  for (var i=0;i<text.length;i++){
+    var c=text[i];
+    if (q){
+      if (c==='"'){ if (text[i+1]==='"'){ field+='"'; i++; } else q=false; }
+      else field+=c;
+    } else {
+      if (c==='"') q=true;
+      else if (c===',') { row.push(field); field=''; }
+      else if (c==='\n') { row.push(field); rows.push(row); row=[]; field=''; }
+      else if (c!=='\r') field+=c;
+    }
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+function kpiStrip(cards){
+  return '<div class="kpi-strip">'+cards.map(function(c){
+    return '<div class="kpi-card '+(c.tone||'')+'">'
+      + '<div class="kpi-val">'+c.val+'</div>'
+      + '<div class="kpi-lbl">'+esc(c.lbl)+'</div>'
+      + (c.sub?'<div class="kpi-sub">'+c.sub+'</div>':'')
+      + '</div>';
+  }).join('')+'</div>';
+}
+
+function loadConsumables() {
+  if (!document.getElementById('panel-consumables')) return;
+  fetchT(CONSUMABLES_CSV, 10000)
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+    .then(function(txt){
+      var rows = parseCSV_(txt).filter(function(r){ return r.some(function(c){ return (c||'').trim()!==''; }); });
+      consumHeaders = rows.length ? rows[0] : CONSUMABLES_HEADERS;
+      consumRows = rows.slice(1); consumSnapshot = false; consumErr = '';
+      renderConsumables();
+    })
+    .catch(function(err){
+      consumHeaders = CONSUMABLES_HEADERS; consumRows = CONSUMABLES_SNAPSHOT; consumSnapshot = true; consumErr = err.message;
+      renderConsumables();
+    });
+}
+
+function renderConsumables(){
+  var el = document.getElementById('panel-consumables');
+  if (!el || !consumHeaders) return;
+  el.innerHTML = consumablesHtml(consumHeaders, consumRows || [], consumSnapshot, consumErr);
+  applyConsumFilter();
+}
+
+// DOM-based filtering: never rebuilds innerHTML on keystroke, so the search box keeps focus.
+function applyConsumFilter(){
+  var inp = document.getElementById('consumSearch');
+  var chk = document.getElementById('consumNeed');
+  if (inp) consumFilter = inp.value;
+  if (chk) consumNeedOnly = chk.checked;
+  var q = (consumFilter||'').trim().toLowerCase();
+  var rows = document.querySelectorAll('#panel-consumables tr.consum-row');
+  var shown = 0;
+  rows.forEach(function(tr){
+    var okText = !q || (tr.getAttribute('data-txt')||'').indexOf(q) !== -1;
+    var okNeed = !consumNeedOnly || tr.getAttribute('data-need') === '1';
+    var vis = okText && okNeed;
+    tr.style.display = vis ? '' : 'none';
+    if (vis) shown++;
+  });
+  var cnt = document.getElementById('consumCount');
+  if (cnt) cnt.textContent = 'Showing ' + shown + ' of ' + rows.length;
+}
+
+function consumablesHtml(headers, data, isSnapshot, errMsg) {
+  function colOf(name){ for (var i=0;i<headers.length;i++){ if (String(headers[i]||'').trim().toUpperCase().indexOf(name)===0) return i; } return -1; }
+  var iHand = colOf('ON HAND'), iNeed = colOf('NEED ORDERED'), iOrd = colOf('AMOUNT ORDERED');
+  var total = data.length, waiting = 0, needCount = 0;
+  // Decorate then action-first sort: items needing reorder float to top (largest shortage first).
+  var rowsMeta = data.map(function(r, idx){
+    var need = parseFloat(r[iNeed]) || 0;
+    var ord  = parseFloat(r[iOrd]) || 0;
+    if (need > 0) needCount++;
+    if (need > 0 && ord > 0) waiting++;
+    return { r:r, need:need, idx:idx };
+  });
+  rowsMeta.sort(function(a,b){
+    var an = a.need>0?1:0, bn = b.need>0?1:0;
+    if (an!==bn) return bn-an;
+    if (an===1 && b.need!==a.need) return b.need-a.need;
+    return a.idx-b.idx;
+  });
+  var bodyRows = rowsMeta.map(function(m){
+    var r = m.r, need = m.need;
+    var txt = String(r.join(' ')||'').toLowerCase();
+    var tds = headers.map(function(h, i){
+      var val = r[i] == null ? '' : String(r[i]);
+      var style = i >= 2 ? ' style="text-align:center"' : '';
+      var cls = [];
+      if (i === iHand) cls.push('inv-onhand');
+      if (i === iNeed && need > 0) cls.push('inv-need');
+      var c = cls.length ? ' class="'+cls.join(' ')+'"' : '';
+      return '<td'+style+c+'>'+esc(val)+'</td>';
+    }).join('');
+    return '<tr class="consum-row'+(need>0?' inv-low':'')+'" data-need="'+(need>0?'1':'0')+'" data-txt="'+esc(txt)+'">'+tds+'</tr>';
+  }).join('');
+  var head = headers.map(function(h, i){
+    var label = String(h||'');
+    if (label.trim().toUpperCase().indexOf('AMOUNT ORDERED BY EWS')===0) label = 'AMOUNT ORDERED';
+    var c = (i === iHand) ? ' class="inv-onhand"' : '';
+    return '<th'+c+'>'+esc(label)+'</th>';
+  }).join('');
+  var banner = isSnapshot
+    ? '<span class="inv-banner warn">&#9888;&#65039; '+esc("Couldn't reach the live sheet"+(errMsg?' ('+errMsg+')':''))+' &mdash; showing a saved snapshot (2026-07-22). Confirm the sheet is shared &ldquo;anyone with the link&rdquo;.</span>'
+    : '<span class="inv-banner ok">&#128994; Live from Google Sheets</span>';
+  var stocked = total - needCount;
+  var insight = needCount>0
+    ? '&#9888;&#65039; <b>'+needCount+'</b> of '+total+' items need reordering'+(waiting>0?' · <b>'+waiting+'</b> already on order':'')
+    : '&#9989; All '+total+' items are stocked — nothing to reorder right now';
+  var kpis = kpiStrip([
+    { val: needCount, lbl:'Needs Reorder', sub:'below safety stock', tone: needCount>0?'alert':'good' },
+    { val: waiting, lbl:'Waiting on Delivery', sub:'ordered, not received', tone:'caution' },
+    { val: stocked, lbl:'Fully Stocked', sub:'no action needed', tone:'good' },
+    { val: total, lbl:'Line Items', sub:'SKUs tracked', tone:'primary' }
+  ]);
+  var tools = '<div class="inv-tools">'
+    + '<input id="consumSearch" class="inv-search" type="text" placeholder="Filter parts…" value="'+esc(consumFilter)+'" oninput="applyConsumFilter()">'
+    + '<label class="inv-toggle"><input id="consumNeed" type="checkbox"'+(consumNeedOnly?' checked':'')+' onchange="applyConsumFilter()"> Needs reorder only</label>'
+    + '<span id="consumCount" class="inv-count"></span>'
+    + '</div>';
+  return '<div class="inv-head">'
+    + '<div><div class="inv-title">&#128230; Consumables Inventory</div><div class="inv-sub">'+banner+'</div></div></div>'
+    + kpis
+    + '<div class="inv-insight">'+insight+'</div>'
+    + tools
+    + '<div class="inv-table-wrap"><table class="inv-table"><thead><tr>'+head+'</tr></thead><tbody>'+bodyRows+'</tbody></table></div>'
+    + '<div class="inv-cap">Source: Consumables Google Sheet · items needing reorder are sorted to the top</div>';
+}
+
+// ============================================================
+//  IRON INVENTORY TRACKER  (live from EWS Asset Tracking sheet)
+// ============================================================
+
+function ironNum(x){ var n=parseFloat(String(x==null?'':x).replace(/[^0-9.\-]/g,'')); return isNaN(n)?0:n; }
+
+function loadIron(){
+  if(!document.getElementById('panel-iron')) return;
+  var keys=Object.keys(IRON_TABS);
+  Promise.all(keys.map(function(k){
+    var url='https://docs.google.com/spreadsheets/d/'+IRON_SHEET+'/export?format=csv&gid='+IRON_TABS[k];
+    return fetchT(url,12000).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); }).then(function(t){ return parseCSV_(t); });
+  })).then(function(res){
+    ironData={ deployed:parseDeployed_(res[0]), rebuild:parseRebuild_(res[1]), available:parseAvailable_(res[2]), totals:parseTotals_(res[3]), live:true };
+    renderIron();
+  }).catch(function(err){ ironData={ error:err.message }; renderIron(); });
+}
+
+function ironJunk_(t){ return !t || /^type$/i.test(t) || /updated|^grand\b|^total|^subtotal|^legend|^notes?\b|^key\b/i.test(t); }
+function parseDeployed_(rows){
+  var fleets=[], types=[], counts={}, seen={}, cur=null;
+  rows.forEach(function(r){
+    var c0=(r[0]||'').trim();
+    if(/fleet\s*#?\s*\d/i.test(c0)){ cur={label:c0, pad:(r[1]||'').trim()}; fleets.push(cur); counts[c0]={}; return; }
+    if(!cur) return;
+    var type=(r[5]||'').trim();
+    if(ironJunk_(type) || type.length>45) return;
+    counts[cur.label][type]=(r[6]||'').trim();
+    if(!seen[type]){ seen[type]=1; types.push(type); }
+  });
+  return { fleets:fleets, types:types, counts:counts };
+}
+function parseRebuild_(rows){
+  var out=[];
+  rows.forEach(function(r){
+    var type=(r[4]||'').trim();
+    if(ironJunk_(type) || type.length>45) return;
+    out.push({ type:type, count:ironNum(r[5]), complete:ironNum(r[6]), paint:ironNum(r[7]), rebuild:ironNum(r[8]), machine:ironNum(r[9]), notStarted:ironNum(r[10]) });
+  });
+  return out;
+}
+function parseAvailable_(rows){
+  var out=[];
+  rows.forEach(function(r){
+    var type=(r[4]||'').trim();
+    if(ironJunk_(type) || type.length>45) return;
+    out.push({ type:type, avail:ironNum(r[5]) });
+  });
+  return out;
+}
+function parseTotals_(rows){
+  var out=[];
+  rows.forEach(function(r){
+    var desc=(r[1]||'').trim(), val=(r[2]||'').trim();
+    if(!desc || /description/i.test(desc) || val==='' || isNaN(parseFloat(val))) return;
+    out.push({ state:desc, value:ironNum(r[2]) });
+  });
+  return out;
+}
+
+function showIronSub(name){ ironSub=name; try{ localStorage.setItem('evo-iron-sub', name); }catch(e){} renderIron(); }
+
+function renderIron(){
+  var host=document.getElementById('panel-iron'); if(!host) return;
+  var subs=[['deployed','Deployed'],['processing','Processing'],['available','Available'],['overview','Asset Overview']];
+  var nav=subs.map(function(s){ return '<button class="iron-subtab'+(ironSub===s[0]?' active':'')+'" onclick="showIronSub(&#39;'+s[0]+'&#39;)">'+s[1]+'</button>'; }).join('');
+  var banner;
+  if(ironData && ironData.live) banner='<span class="inv-banner ok">&#128994; Live from EWS Asset Tracking</span>';
+  else if(ironData && ironData.error) banner='<span class="inv-banner warn">&#9888;&#65039; '+esc("Couldn't load the asset sheet ("+ironData.error+").")+'</span>';
+  else banner='<span class="inv-banner warn">Loading…</span>';
+  var kpis='', insight='', cap='';
+  if(ironData && !ironData.error){
+    var tm={}; (ironData.totals||[]).forEach(function(t){ tm[String(t.state).toLowerCase()]=t.value; });
+    var total=(ironData.totals||[]).reduce(function(a,b){return a+b.value;},0);
+    var deployed=tm['deployed']||0;
+    var inProc=(tm['paint']||0)+(tm['rebuild']||0)+(tm['machine']||0)+(tm['unstarted']||0)+(tm['not started']||0);
+    var complete=tm['completed']||tm['complete']||0;
+    var availSum=(ironData.available||[]).reduce(function(a,b){return a+b.avail;},0);
+    var depPct=total?Math.round(deployed/total*100):0, procPct=total?Math.round(inProc/total*100):0;
+    kpis=kpiStrip([
+      { val: total, lbl:'Total Assets', sub:'tracked in EWS', tone:'primary' },
+      { val: deployed, lbl:'Deployed', sub:depPct+'% in the field', tone:'good' },
+      { val: inProc, lbl:'In Process', sub:procPct+'% in the shop', tone:'caution' },
+      { val: availSum, lbl:'Available', sub:'ready on the shelf', tone:'good' }
+    ]);
+    var dep=ironData.deployed||{fleets:[],types:[],counts:{}};
+    var sumDep=0; (dep.types||[]).forEach(function(t){ (dep.fleets||[]).forEach(function(f){ sumDep+=ironNum((dep.counts[f.label]||{})[t]); }); });
+    var av=(ironData.available||[]).slice().sort(function(a,b){return b.avail-a.avail;}); var topAv=av[0];
+    if(ironSub==='processing') insight='<b>'+inProc+'</b> assets in the shop · <b>'+complete+'</b> complete &amp; ready to deploy';
+    else if(ironSub==='available') insight='Most available: <b>'+(topAv?esc(topAv.type)+'</b> ('+topAv.avail+')':'&mdash;</b>')+' · <b>'+availSum+'</b> units on the shelf';
+    else if(ironSub==='overview') insight='Deployed is <b>'+depPct+'%</b> of the <b>'+total+'</b>-asset fleet';
+    else insight='Equipment placement across <b>'+(dep.fleets||[]).length+'</b> fleets — darker cells mean more units';
+    cap='<div class="inv-cap">Source: EWS Asset Tracking v3.0 (Google Sheets) · live, refreshes with the dashboard</div>';
+  }
+  var body;
+  if(!ironData || ironData.error) body = (ironData && ironData.error)
+    ? '<div class="no-data"><div class="no-data-icon">&#128246;</div><p style="margin-bottom:2px">Couldn’t reach the asset data right now.</p><p style="font-size:12px;color:var(--text-secondary)">Check the connection, then try again.</p><button onclick="loadIron()" style="margin-top:12px;padding:7px 16px;border:1px solid var(--primary);background:var(--primary);color:#fff;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer">&#8635; Try again</button></div>'
+    : '<div class="no-data"><div class="no-data-icon">&#128295;</div><p>Loading iron inventory…</p></div>';
+  else if(ironSub==='processing') body=renderIronProcessing();
+  else if(ironSub==='available') body=renderIronAvailable();
+  else if(ironSub==='overview') body=renderIronOverview();
+  else body=renderIronDeployed();
+  host.innerHTML='<div class="inv-head"><div><div class="inv-title">&#128295; Iron Inventory Tracker</div><div class="inv-sub">'+banner+'</div></div></div>'
+    +kpis
+    +'<div class="iron-subnav">'+nav+'</div>'
+    +(insight?'<div class="inv-insight">'+insight+'</div>':'')
+    +'<div class="iron-body">'+body+'</div>'
+    +cap;
+}
+
+function renderIronDeployed(){
+  var d=ironData.deployed;
+  if(!d||!d.fleets.length) return '<div class="no-data"><p>No deployed equipment found.</p></div>';
+  // Heatmap scale: find the largest single cell so shading is relative.
+  var maxCell=1;
+  d.types.forEach(function(t){ d.fleets.forEach(function(f){ var n=ironNum((d.counts[f.label]||{})[t]); if(n>maxCell) maxCell=n; }); });
+  var head='<th class="iron-sticky">Equipment</th>'+d.fleets.map(function(f){
+    return '<th class="iron-fleet"><span class="iron-fleet-name">'+esc(f.label)+'</span><span class="iron-fleet-pad">'+esc(f.pad||'&mdash;')+'</span></th>';
+  }).join('')+'<th class="ic">Total</th>';
+  var body=d.types.map(function(t){
+    var rowTotal=0;
+    var cells=d.fleets.map(function(f){
+      var v=(d.counts[f.label]||{})[t]; var n=ironNum(v); rowTotal+=n;
+      if(n<=0) return '<td class="iron-c"><span class="iron-zero">0</span></td>';
+      var a=0.12+0.80*(n/maxCell);
+      var tc=a>0.60?'color:#fff;':'';
+      return '<td class="iron-c" style="background:rgba(var(--heat-rgb),'+a.toFixed(3)+');'+tc+'"><span class="iron-heat-num">'+n+'</span></td>';
+    }).join('');
+    return '<tr><td class="iron-sticky iron-type">'+esc(t)+'</td>'+cells+'<td class="ic iron-total-col">'+rowTotal+'</td></tr>';
+  }).join('');
+  var grand=0;
+  var footCells=d.fleets.map(function(f){ var s=0; d.types.forEach(function(t){ s+=ironNum((d.counts[f.label]||{})[t]); }); grand+=s; return '<td class="ic iron-total-col">'+s+'</td>'; }).join('');
+  var foot='<tr><td class="iron-sticky iron-total-col">All Equipment</td>'+footCells+'<td class="ic iron-total-col">'+grand+'</td></tr>';
+  return '<div class="inv-table-wrap"><table class="inv-table iron-matrix"><thead><tr>'+head+'</tr></thead><tbody>'+body+foot+'</tbody></table></div>';
+}
+
+function ironStack(segs,total,maxTotal){
+  if(total<=0) return '<span class="iron-zero">0</span>';
+  var w=Math.max(3,Math.round(total/maxTotal*100));
+  var inner=segs.filter(function(s){return s.v>0;}).map(function(s){
+    return '<span class="iron-seg" style="width:'+(s.v/total*100)+'%;background:'+s.color+'" title="'+esc(s.name)+': '+s.v+'"></span>';
+  }).join('');
+  return '<div class="iron-bar-wrap" style="width:'+w+'%">'+inner+'</div>';
+}
+
+function renderIronProcessing(){
+  var rows=(ironData.rebuild||[]).slice().sort(function(a,b){return b.count-a.count;});
+  if(!rows.length) return '<div class="no-data"><p>No processing data.</p></div>';
+  var maxCount=Math.max(1,Math.max.apply(null,rows.map(function(r){return r.count;})));
+  var head='<th>Equipment</th><th class="ic">Count</th><th class="ic">Complete</th><th class="ic">Paint</th><th class="ic">Rebuild</th><th class="ic">Machine</th><th class="ic">Not Started</th><th>Distribution</th>';
+  var body=rows.map(function(r){
+    var segs=[{name:'Complete',v:r.complete,color:IRON_COLORS.Complete},{name:'Paint',v:r.paint,color:IRON_COLORS.Paint},{name:'Rebuild',v:r.rebuild,color:IRON_COLORS.Rebuild},{name:'Machine',v:r.machine,color:IRON_COLORS.Machine},{name:'Not Started',v:r.notStarted,color:IRON_COLORS['Not Started']}];
+    return '<tr><td>'+esc(r.type)+'</td><td class="ic" style="font-weight:800">'+r.count+'</td><td class="ic">'+r.complete+'</td><td class="ic">'+r.paint+'</td><td class="ic">'+r.rebuild+'</td><td class="ic">'+r.machine+'</td><td class="ic">'+r.notStarted+'</td><td class="iron-barcell">'+ironStack(segs,r.count,maxCount)+'</td></tr>';
+  }).join('');
+  return stateLegend(['Complete','Paint','Rebuild','Machine','Not Started'])+'<div class="inv-table-wrap"><table class="inv-table"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>';
+}
+
+function renderIronAvailable(){
+  var rows=(ironData.available||[]).slice().sort(function(a,b){return b.avail-a.avail;});
+  if(!rows.length) return '<div class="no-data"><p>No available data.</p></div>';
+  var maxV=Math.max(1,Math.max.apply(null,rows.map(function(r){return r.avail;})));
+  var body=rows.map(function(r){
+    var w=r.avail>0?Math.max(3,Math.round(r.avail/maxV*100)):0;
+    return '<tr><td>'+esc(r.type)+'</td><td class="ic" style="font-weight:800">'+r.avail+'</td><td class="iron-barcell"><div class="iron-bar-wrap" style="width:'+w+'%"><span class="iron-seg" style="width:100%;background:var(--primary)"></span></div></td></tr>';
+  }).join('');
+  return '<div class="inv-table-wrap"><table class="inv-table"><thead><tr><th>Equipment</th><th class="ic">Available</th><th>&nbsp;</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+}
+
+function stateLegend(states){
+  return '<div class="iron-legend">'+states.map(function(s){ return '<span class="iron-leg"><span class="iron-dot" style="background:'+(IRON_COLORS[s]||'#999')+'"></span>'+esc(s)+'</span>'; }).join('')+'</div>';
+}
+
+function renderIronOverview(){
+  // Skill note: 6 status categories exceed the 5-slice pie/donut limit, so this uses a
+  // ranked horizontal bar chart (sorted by value, labelled directly) per chart-builder.
+  var totals=(ironData.totals||[]).slice().sort(function(a,b){return b.value-a.value;});
+  var sum=totals.reduce(function(a,b){return a+b.value;},0);
+  var max=totals.length?totals[0].value:1; if(max<=0) max=1;
+  var bars=totals.map(function(t){
+    var pct=sum>0?(t.value/sum*100):0;
+    var w=Math.max(2, t.value/max*100);
+    var col=IRON_COLORS[t.state]||'#999';
+    return '<div class="rank-row">'
+      +'<div class="rank-lbl"><span class="iron-dot" style="background:'+col+'"></span>'+esc(t.state)+'</div>'
+      +'<div class="rank-track"><div class="rank-fill" style="width:'+w+'%;background:'+col+'"></div></div>'
+      +'<div class="rank-val">'+t.value+' <span>'+pct.toFixed(1)+'%</span></div>'
+    +'</div>';
+  }).join('');
+  var card='<div class="rank-card"><div class="iron-tbl-title">Asset status — ranked by count (of '+sum+' total)</div>'+bars+'</div>';
+  var rb=ironData.rebuild||[];
+  function tbl(title,cols){
+    var head=cols.map(function(c,i){ return '<th'+(i>0?' class="ic"':'')+'>'+c.h+'</th>'; }).join('');
+    var b=rb.map(function(row){ return '<tr>'+cols.map(function(c,i){ return i===0?'<td>'+esc(row.type)+'</td>':'<td class="ic">'+(row[c.k]||0)+'</td>'; }).join('')+'</tr>'; }).join('');
+    return '<div class="iron-tbl-card"><div class="iron-tbl-title">'+title+'</div><div class="inv-table-wrap"><table class="inv-table"><thead><tr>'+head+'</tr></thead><tbody>'+b+'</tbody></table></div></div>';
+  }
+  var tAll=tbl('Count & rebuild stages by equipment',[{h:'Equipment',k:'type'},{h:'Count',k:'count'},{h:'Complete',k:'complete'},{h:'Paint',k:'paint'},{h:'Rebuild',k:'rebuild'},{h:'Machine',k:'machine'},{h:'Not Started',k:'notStarted'}]);
+  return card+tAll;
+}
+
 function renderAll() {
   if (!appData) return;
+  // Fleet #1 removed from the dashboard
+  if (Array.isArray(appData.fleets)) {
+    appData.fleets = appData.fleets.filter(f => String(f.num) !== '1');
+  }
   renderSummary();
   renderCalendar();
-  renderGantt();
   renderFleetPanels();
 }
 
@@ -777,8 +1355,10 @@ function fmt(s) {
 }
 function fmtRange(s, e) {
   if (!s) return null;
-  if (!e || s === e) return fmt(s);
-  return fmt(s) + ' – ' + fmt(e);
+  // Fall back to the raw value if a side won't parse, so an unparseable/typo'd
+  // date (e.g. "7/116/2026") shows the real value instead of the literal "null".
+  if (!e || s === e) return fmt(s) || s;
+  return (fmt(s) || s) + ' – ' + (fmt(e) || e);
 }
 function todayISO() {
   const n = new Date();
@@ -862,14 +1442,31 @@ function renderSummary() {
     });
   });
 
-  document.getElementById('statsRow').innerHTML = `
-    <div class="stat-card"><div class="stat-num" style="color:#1B5E20">${active}</div><div class="stat-lbl">Active Now</div></div>
-    <div class="stat-card"><div class="stat-num" style="color:#E65100">${soon}</div><div class="stat-lbl">Within 7 Days</div></div>
-    <div class="stat-card"><div class="stat-num" style="color:#1565C0">${appData.fleets.length}</div><div class="stat-lbl">Fleets</div></div>
-    <div class="stat-card"><div class="stat-num" style="color:#6b7280">${total}</div><div class="stat-lbl">Total Events</div></div>`;
-
-  // Conflicts
   const conflicts = detectConflicts(allEv);
+
+  // Headline KPI cards (unified .kpi-card style + semantic tones)
+  const cards = [
+    { v:active,                  l:'Active Now',    s:'in progress',                              tone:'good' },
+    { v:soon,                    l:'Within 7 Days', s:'coming up',                                tone:'caution' },
+    { v:conflicts.length,        l:'Conflicts',     s: conflicts.length ? 'need resolving' : 'all clear', tone: conflicts.length ? 'alert' : 'good' },
+    { v:appData.fleets.length,   l:'Fleets',        s:'tracked',                                  tone:'primary' }
+  ];
+  document.getElementById('statsRow').innerHTML = cards.map(function(c){
+    return '<div class="kpi-card '+c.tone+'"><div class="kpi-val">'+c.v+'</div><div class="kpi-lbl">'+esc(c.l)+'</div><div class="kpi-sub">'+c.s+'</div></div>';
+  }).join('');
+
+  // Insight line: the single most useful sentence — what's next + conflicts
+  const upcoming = allEv.filter(function(e){ return e.start >= today; }).sort(function(a,b){ return a.start<b.start?-1:(a.start>b.start?1:0); });
+  let ins;
+  if (upcoming.length) {
+    const n = upcoming[0], d = diffDays(n.start);
+    ins = '⚡ Next up: <b>Fleet #'+n.fleetNum+'</b> '+esc(n.label)+' '+(d===0?'today':'in '+d+'d')+' <span style="color:var(--text-secondary)">('+(fmt(n.start)||n.start)+')</span>';
+  } else {
+    ins = 'No upcoming events scheduled.';
+  }
+  if (conflicts.length) ins += ' · <b style="color:var(--alert)">'+conflicts.length+'</b> conflict'+(conflicts.length>1?'s':'')+' to resolve';
+  const insEl = document.getElementById('summaryInsight'); if (insEl) insEl.innerHTML = ins;
+
   const cb = document.getElementById('conflictBanner');
   if (conflicts.length) {
     cb.innerHTML = '<div class="conflict-title">⚠️ Schedule Conflicts Detected (' + conflicts.length + ')</div>' +
@@ -965,15 +1562,45 @@ function calNav(dir) {
   renderCalendar();
 }
 
+var calFleetFilter = '';
+function setCalFleet(v){ calFleetFilter = v; renderCalendar(); }
+
+// Dates where two different fleets collide (same-day rig events, or overlapping roustabout crews).
+function computeConflictDates(){
+  var set = {};
+  if (!appData) return set;
+  var rig = [], roust = [];
+  appData.fleets.forEach(function(f){
+    collectEvents(f).forEach(function(e){
+      if (e.type==='rigup' || e.type==='rigdown') rig.push({ fleet:f.num, start:e.start });
+      if (e.type==='roustabout') roust.push({ fleet:f.num, start:e.start, end:e.end||e.start });
+    });
+  });
+  for (var i=0;i<rig.length;i++) for (var j=i+1;j<rig.length;j++)
+    if (String(rig[i].fleet)!==String(rig[j].fleet) && rig[i].start===rig[j].start) set[rig[i].start]=1;
+  for (var a=0;a<roust.length;a++) for (var b=a+1;b<roust.length;b++){
+    if (String(roust[a].fleet)===String(roust[b].fleet)) continue;
+    var oS = roust[a].start>roust[b].start?roust[a].start:roust[b].start;
+    var oE = roust[a].end<roust[b].end?roust[a].end:roust[b].end;
+    if (oS<=oE){ var c=parseDate(oS), e=parseDate(oE); while(c&&e&&c<=e){ set[c.getFullYear()+'-'+pad2(c.getMonth()+1)+'-'+pad2(c.getDate())]=1; c.setDate(c.getDate()+1); } }
+  }
+  return set;
+}
+
 function renderCalendar() {
   document.getElementById('calMonthLbl').textContent = MONTH_NAMES[calMonth] + ' ' + calYear;
 
-  // Build date→events map
+  // Build date→events map (respecting the fleet filter) + tally this month's rig moves
   const evMap = {};
+  let mRigUp=0, mRigDown=0;
+  const ymPrefix = calYear+'-'+pad2(calMonth+1)+'-';
   if (appData) {
     appData.fleets.forEach(f => {
+      if (calFleetFilter && String(f.num)!==String(calFleetFilter)) return;
       collectEvents(f).forEach(ev => {
         if (!ev.start) return;
+        if (ev.type==='rigup'   && ev.start.indexOf(ymPrefix)===0) mRigUp++;
+        if (ev.type==='rigdown' && ev.start.indexOf(ymPrefix)===0) mRigDown++;
         const s=parseDate(ev.start), e=parseDate(ev.end||ev.start);
         if (!s) return;
         let cur=new Date(s);
@@ -986,6 +1613,8 @@ function renderCalendar() {
       });
     });
   }
+  const conflictDates = computeConflictDates();
+  let mConflictDays = 0;
 
   const today = todayISO();
   const firstDow = new Date(calYear, calMonth, 1).getDay();
@@ -1011,7 +1640,9 @@ function renderCalendar() {
       const titleTxt = `Fleet #${ev.fleetNum} · ${ev.label}${meta ? ' | '+meta : ''}`;
       return `<div class="cal-ev" style="background:${c}" title="${titleTxt}"><span>#${ev.fleetNum} ${ev.label}${meta ? '<span style="opacity:0.8;font-weight:400"> · '+meta+'</span>' : ''}</span></div>`;
     }).join('');
-    html += `<div class="cal-cell${isToday?' cal-today':''}" data-date="${ds}" onclick="openDayDetail('${ds}')"><div class="cal-day-num">${d}</div>${evHtml}</div>`;
+    const isConflict = !!conflictDates[ds];
+    if (isConflict) mConflictDays++;
+    html += `<div class="cal-cell${isToday?' cal-today':''}${isConflict?' cal-conflict':''}" data-date="${ds}" onclick="openDayDetail('${ds}')"><div class="cal-day-num">${d}</div>${evHtml}</div>`;
   }
   // Next month padding
   const used = firstDow + daysInMonth;
@@ -1019,6 +1650,19 @@ function renderCalendar() {
   for (let i=1; i<=rem; i++) html += `<div class="cal-cell other-month"><div class="cal-day-num">${i}</div></div>`;
 
   document.getElementById('calGrid').innerHTML = html;
+
+  // Month-at-a-glance strip + fleet filter
+  var cs = document.getElementById('calSummary');
+  if (cs) {
+    var fopts = '<option value="">All fleets</option>' + (appData ? appData.fleets.map(function(f){
+      return '<option value="'+f.num+'"'+(String(calFleetFilter)===String(f.num)?' selected':'')+'>Fleet #'+f.num+' · '+esc(f.shortName||'')+'</option>';
+    }).join('') : '');
+    cs.innerHTML =
+        '<span class="cs-item"><span class="cs-num primary">'+mRigUp+'</span><span class="cs-lbl">rig-ups</span></span>'
+      + '<span class="cs-item"><span class="cs-num">'+mRigDown+'</span><span class="cs-lbl">rig-downs</span></span>'
+      + '<span class="cs-item"><span class="cs-num '+(mConflictDays?'alert':'good')+'">'+mConflictDays+'</span><span class="cs-lbl">conflict day'+(mConflictDays===1?'':'s')+'</span></span>'
+      + '<span class="cal-filter">Filter: <select onchange="setCalFleet(this.value)">'+fopts+'</select></span>';
+  }
 }
 
 // Day detail popup (clicking any day opens it on desktop and mobile)
@@ -1313,17 +1957,21 @@ function sideCard(side, label, cssClass) {
     + shiftRow
     + dtRow('Logistics Date', side.logisticsDate, side.logisticsTime)
     + sh('Services')
-    + svcRow('Monoline Iron',           !!(side.monolineIron))
-    + svcRow('Pumpdown Iron',           !!(side.pumpdownIron))
-    + svcRow('Low Pressure Iron',       !!(side.lowPressureIron))
-    + svcRow('Flowback Iron',           !!(side.flowbackIron))
-    + svcRow('High Pressure Hoses',     !!(side.highPressureHoses))
-    + svcRow('Rig Mats / Barrier Wall', !!(side.rigMats))
-    + svcRow('Pull Cables',             !!(side.pullCables))
+    + svcChips([
+        { label:'Monoline Iron',           on:!!side.monolineIron },
+        { label:'Pumpdown Iron',           on:!!side.pumpdownIron },
+        { label:'Low Pressure Iron',       on:!!side.lowPressureIron },
+        { label:'Flowback Iron',           on:!!side.flowbackIron },
+        { label:'High Pressure Hoses',     on:!!side.highPressureHoses },
+        { label:'Rig Mats / Barrier Wall', on:!!side.rigMats },
+        { label:'Pull Cables',             on:!!side.pullCables }
+      ])
     + sh('Logistics')
-    + svcRow('RES Load Transports',         !!(side.loadTransports), side.loadQty   ? side.loadQty   + ' TRUCKS' : '')
-    + svcRow('RES Unload Transports',       !!(side.unloadTransports), side.unloadQty ? side.unloadQty + ' TRUCKS' : '')
-    + svcRow('RES Provided Semi / Hotshot', !!(side.semiHotshot),      side.semiQty   ? side.semiQty   + ' TRUCKS' : '')
+    + svcChips([
+        { label:'RES Load Transports',   on:!!side.loadTransports,   qty: side.loadQty   ? side.loadQty   + ' trucks' : '' },
+        { label:'RES Unload Transports', on:!!side.unloadTransports, qty: side.unloadQty ? side.unloadQty + ' trucks' : '' },
+        { label:'RES Semi / Hotshot',    on:!!side.semiHotshot,      qty: side.semiQty   ? side.semiQty   + ' trucks' : '' }
+      ])
     + sh('Add On Services')
     + svcRow('Misc', !!(side.misc && side.misc.start))
     + (side.misc && side.misc.desc ? '<div class="detail-row"><div class="detail-lbl">Description</div><div class="detail-val" style="font-style:italic;color:var(--text-secondary);font-size:12px">' + esc(side.misc.desc) + '</div></div>' : '')
@@ -1334,19 +1982,214 @@ function sideCard(side, label, cssClass) {
     + '</div>';
 }
 
+// Next upcoming milestone for a single fleet — the one sentence that matters most.
+function fleetNextLine(f) {
+  var today = todayISO();
+  var evs = collectEvents(f).filter(function(e){ return (e.end||e.start) >= today; })
+                            .sort(function(a,b){ return a.start<b.start?-1:(a.start>b.start?1:0); });
+  var n = evs[0];
+  if (!n) return '<div class="fleet-insight">No upcoming milestones scheduled.</div>';
+  var d = diffDays(n.start);
+  var when = d===0 ? 'today' : (d>0 ? 'in '+d+'d' : Math.abs(d)+'d ago');
+  var padStr = n.pad ? (/^pad\b/i.test(String(n.pad).trim()) ? n.pad : 'Pad '+n.pad) : '';
+  var locpad = [n.loc, padStr].filter(Boolean).join(' · ');
+  return '<div class="fleet-insight">&#9889; Next: <b>'+esc(n.label)+'</b> '+(fmt(n.start)||n.start)+' ('+when+')'+(locpad?' · '+esc(locpad):'')+'</div>';
+}
+
+// Compact chip row: selected services pop (colored), the rest recede (muted) — grey-by-default.
+function svcChips(items) {
+  var on  = items.filter(function(i){ return i.on; });
+  var off = items.filter(function(i){ return !i.on; });
+  var html = '<div class="svc-chips">';
+  on.forEach(function(i){ html += '<span class="svc-chip">'+esc(i.label)+(i.qty?'<span class="svc-qty">'+esc(i.qty)+'</span>':'')+'</span>'; });
+  off.forEach(function(i){ html += '<span class="svc-chip off">'+esc(i.label)+'</span>'; });
+  html += '</div>';
+  return html;
+}
+
+// Pad Info box — current pad (rig down) vs next pad (rig up), from the sheet feed.
+function padInfoBox(f) {
+  var rd = f.rigDown || {}, ru = f.rigUp || {};
+  // Address / Maps Link / GPS come from the "Rig Up/Down Pad Info" blocks at the
+  // bottom of each fleet tab (surfaced via the Apps Script). Hidden until present.
+  function padExtras(o) {
+    var rows = '';
+    if (o.address)  rows += '<div class="pad-x"><span class="pad-x-lbl">Address</span><span class="pad-x-val">' + esc(o.address) + '</span></div>';
+    if (o.mapsLink) {
+      var ml = String(o.mapsLink);
+      var inner = /^https?:\/\//i.test(ml)
+        ? '<a href="' + esc(ml) + '" target="_blank" rel="noopener">Open in Maps &#8599;</a>'
+        : esc(ml);
+      rows += '<div class="pad-x"><span class="pad-x-lbl">Maps</span><span class="pad-x-val">' + inner + '</span></div>';
+    }
+    if (o.gps)      rows += '<div class="pad-x"><span class="pad-x-lbl">GPS</span><span class="pad-x-val gps">' + esc(o.gps) + '</span></div>';
+    return rows ? '<div class="pad-x-wrap">' + rows + '</div>' : '';
+  }
+  function cell(lbl, o, tone) {
+    var dstr = o.date ? (fmt(o.date) || o.date) : '';
+    var c = o.date ? chip(o.date) : '';
+    var sub = [o.location ? esc(o.location) : '', dstr].filter(Boolean).join(' · ');
+    return '<div class="pad-cell ' + tone + '">'
+      + '<div class="pad-cell-lbl">' + lbl + '</div>'
+      + '<div class="pad-cell-pad">' + (o.pad ? esc(o.pad) : '<span class="pad-empty">Not set</span>') + '</div>'
+      + '<div class="pad-cell-sub">' + sub + (c ? ' ' + c : '') + '</div>'
+      + padExtras(o)
+      + '</div>';
+  }
+  return '<div class="pad-box">'
+    + '<div class="pad-box-title">&#128205; Pad Info</div>'
+    + '<div class="pad-grid">'
+    + cell('Next Pad &middot; Rig Up',      ru, 'next')
+    + cell('Current Pad &middot; Rig Down', rd, 'current')
+    + '</div></div>';
+}
+
 function fleetPanel(f) {
   var color = FLEET_COLORS[f.num] || '#1565C0';
   var rd = f.rigDown, ru = f.rigUp;
   return '<div class="fleet-page-header">'
     + '<div class="fleet-badge-lg" style="background:' + color + '">' + f.num + '</div>'
-    + '<div><div class="fleet-page-title">' + esc(f.name) + '</div>'
+    + '<div style="flex:1"><div class="fleet-page-title">' + esc(f.name) + '</div>'
     + '<div class="fleet-page-sub">Detailed schedule · Click any card to return to summary</div>'
+    + fleetNextLine(f)
     + '</div></div>'
+    + padInfoBox(f)
     + '<div class="fleet-detail-grid">'
-    + sideCard(rd, '🔴&nbsp; Rig Down', 'rigdown')
     + sideCard(ru, '🟢&nbsp; Rig Up',   'rigup')
+    + sideCard(rd, '🔴&nbsp; Rig Down', 'rigdown')
+    + '</div>'
+    + filesSection(f);
+}
+// ============================================================
+//  RIG UP DRAWING + CERTIFICATION PACKET 
+// ============================================================
+// Files picked in the browser are held here so preview + download work even
+// before the upload backend exists. Once UPLOAD_URL is set and the Apps Script
+// backend returns f.files.<kind> = {url,name}, those shared links take over.
+var pendingFiles = {};
+var _PNG='image/png,.png', _DWG='.dwg,application/acad,image/vnd.dwg', _ZIP='.zip,application/zip,application/x-zip-compressed';
+var FILE_ACCEPT = { drawing:_PNG, pumpdrawing:_PNG, dwg:_DWG, pumpdwg:_DWG, cert:_ZIP, pumpcert:_ZIP };
+
+function fileMeta(f, kind) {
+  var rec = (f.files || {})[kind];
+  if (rec && rec.url) return { url:rec.url, name:rec.name || kind, source:'server' };
+  var pend = (pendingFiles[f.num] || {})[kind];
+  if (pend) return { url:pend.url, name:pend.name, source:'local' };
+  return null;
+}
+
+function filesSection(f) {
+  var num = f.num;
+  return '<div class="fleet-files-grid">'
+    + drawingCardHtml(f, num, 'Rig Up Drawing',   'drawing',     'dwg')
+    + drawingCardHtml(f, num, 'Pumpdown Drawing', 'pumpdrawing', null)
+    + certCardHtml(f, num, 'Certification Packet', 'cert')
     + '</div>';
 }
+
+// URL-driven file cards: the drawing/DWG/packet URLs come from the fleet sheet
+// (fleet.files.<kind>.url). No in-browser uploads — links open the file directly.
+function drawingCardHtml(f, num, title, drawKind, dwgKind) {
+  var draw = fileMeta(f, drawKind);
+  var dwg  = dwgKind ? fileMeta(f, dwgKind) : null;
+  var previewHtml = draw
+    ? '<div class="drawing-preview"><img src="' + esc(draw.url) + '" alt="' + esc(title) + '" onerror="this.closest(&#39;.drawing-preview&#39;).classList.add(&#39;broken&#39;)"></div>'
+    : '<div class="file-empty"><span class="dz-icon">&#x1F5BC;&#xFE0F;</span>No drawing linked yet<br><span style="font-size:11px">Paste the image URL in the fleet sheet</span></div>';
+  var btns = '<button class="file-btn' + (draw ? '' : ' disabled') + '" onclick="downloadFile(&#39;' + num + '&#39;,&#39;' + drawKind + '&#39;)">&#x2B07; Open Drawing</button>';
+  if (dwgKind) btns += '<button class="file-btn secondary' + (dwg ? '' : ' disabled') + '" onclick="downloadFile(&#39;' + num + '&#39;,&#39;' + dwgKind + '&#39;)">&#x2B07; Open DWG</button>';
+  return '<div class="section-card">'
+    + '<div class="sc-header drawing">&#x1F4D0;&nbsp; ' + esc(title) + '</div>'
+    + '<div class="file-body">'
+    + previewHtml
+    + '<div class="file-btn-row">' + btns + '</div>'
+    + '</div></div>';
+}
+
+function certCardHtml(f, num, title, certKind) {
+  var cert = fileMeta(f, certKind);
+  var zone = cert
+    ? '<div class="file-linked"><span class="dz-icon">&#x1F4E6;</span><span>Packet linked</span></div>'
+    : '<div class="file-empty"><span class="dz-icon">&#x1F4E6;</span>No packet linked yet<br><span style="font-size:11px">Paste the .zip URL in the fleet sheet</span></div>';
+  return '<div class="section-card">'
+    + '<div class="sc-header cert">&#x1F4CB;&nbsp; ' + esc(title) + '</div>'
+    + '<div class="file-body">'
+    + zone
+    + '<div class="file-btn-row">'
+    + '<button class="file-btn' + (cert ? '' : ' disabled') + '" onclick="downloadFile(&#39;' + num + '&#39;,&#39;' + certKind + '&#39;)">&#x2B07; Download ' + esc(title) + '</button>'
+    + '</div></div></div>';
+}
+
+function statusKindFor(kind) {
+  if (kind === 'dwg') return 'drawing';
+  if (kind === 'pumpdwg') return 'pumpdrawing';
+  return kind;
+}
+
+function backendNoteBlock() {
+  if (typeof UPLOAD_URL !== 'undefined' && UPLOAD_URL) return '';
+  return '<div class="file-note" style="margin-top:14px">&#9888;&#65039; Uploads currently preview &amp; download in your browser only &mdash; they are <b>not saved or shared</b> yet. Deploy the Apps Script backend and set <code>UPLOAD_URL</code> to store files per fleet and share them with your team.</div>';
+}
+
+function pickAndUpload(num, kind) {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = FILE_ACCEPT[kind] || '';
+  input.style.display = 'none';
+  input.onchange = function() {
+    if (input.files && input.files[0]) handleUpload(num, kind, input.files[0]);
+    if (input.parentNode) input.parentNode.removeChild(input);
+  };
+  document.body.appendChild(input);
+  input.click();
+}
+
+function handleUpload(num, kind, file) {
+  pendingFiles[num] = pendingFiles[num] || {};
+  pendingFiles[num][kind] = { file:file, name:file.name, url:URL.createObjectURL(file) };
+  rerenderFleet(num);
+
+  var statusEl = document.getElementById('status-' + statusKindFor(kind) + '-' + num);
+  if (typeof UPLOAD_URL === 'undefined' || !UPLOAD_URL) {
+    if (statusEl) statusEl.textContent = '✔ ' + file.name + ' loaded locally (not saved — backend not connected).';
+    return;
+  }
+  if (statusEl) statusEl.textContent = '⏳ Uploading ' + file.name + '…';
+  var reader = new FileReader();
+  reader.onload = function() {
+    var base64 = String(reader.result).split(',')[1] || '';
+    fetch(UPLOAD_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action:'upload', fleet:num, kind:kind, filename:file.name, mimeType:file.type || 'application/octet-stream', dataBase64:base64 })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (!res || !res.ok) throw new Error((res && res.error) || 'Upload failed');
+      if (statusEl) statusEl.textContent = '✔ Saved: ' + (res.name || file.name);
+      refreshData();
+    })
+    .catch(function(err){ if (statusEl) statusEl.textContent = '❌ ' + err.message; });
+  };
+  reader.readAsDataURL(file);
+}
+
+function rerenderFleet(num) {
+  var f = ((appData && appData.fleets) || []).filter(function(x){ return String(x.num) === String(num); })[0];
+  var el = document.getElementById('panel-fleet-' + num);
+  if (f && el) el.innerHTML = fleetPanel(f);
+}
+
+function downloadFile(num, kind) {
+  var f = ((appData && appData.fleets) || []).filter(function(x){ return String(x.num) === String(num); })[0];
+  if (!f) return;
+  var meta = fileMeta(f, kind);
+  if (!meta || !meta.url) return;
+  if (meta.source === 'server') { window.open(meta.url, '_blank'); return; }
+  var a = document.createElement('a');
+  a.href = meta.url; a.download = meta.name || (kind + '-fleet' + num);
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
 function dRow(label, value, end, isDate) {
   let display = value;
   let c = '';
@@ -1421,6 +2264,7 @@ function loadDemoData() {
 //  PANEL / TAB SWITCHING
 // ============================================================
 function showPanel(id) {
+  if (!document.getElementById('panel-'+id)) id = 'summary';
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   const panel = document.getElementById('panel-'+id);
