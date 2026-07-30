@@ -1033,7 +1033,7 @@ function loadConsumables() {
     .then(function(txt){
       var rows = parseCSV_(txt).filter(function(r){ return r.some(function(c){ return (c||'').trim()!==''; }); });
       consumHeaders = rows.length ? rows[0] : CONSUMABLES_HEADERS;
-      consumRows = rows.slice(1); consumSnapshot = false; consumErr = '';
+      consumRows = rows.slice(1).map(function(r){ return r.map(cleanVal); }); consumSnapshot = false; consumErr = '';
       renderConsumables();
     })
     .catch(function(err){
@@ -1042,9 +1042,11 @@ function loadConsumables() {
     });
 }
 
+function consumSearchFocused_(){ var sb = document.getElementById('consumSearch'); return !!sb && document.activeElement === sb; }
 function renderConsumables(){
   var el = document.getElementById('panel-consumables');
   if (!el || !consumHeaders) return;
+  if (consumSearchFocused_()) return; // Q-6: don't rebuild the table while the user is typing in the filter
   el.innerHTML = consumablesHtml(consumHeaders, consumRows || [], consumSnapshot, consumErr);
   applyConsumFilter();
 }
@@ -1145,7 +1147,7 @@ function loadIron(){
   var keys=Object.keys(IRON_TABS);
   Promise.all(keys.map(function(k){
     var url='https://docs.google.com/spreadsheets/d/'+IRON_SHEET+'/export?format=csv&gid='+IRON_TABS[k];
-    return fetchT(url,12000).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); }).then(function(t){ return parseCSV_(t); });
+    return fetchT(url,12000).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); }).then(function(t){ return parseCSV_(t).map(function(r){ return r.map(cleanVal); }); });
   })).then(function(res){
     ironData={ deployed:parseDeployed_(res[0]), rebuild:parseRebuild_(res[1]), available:parseAvailable_(res[2]), totals:parseTotals_(res[3]), live:true };
     renderIron();
@@ -1644,8 +1646,9 @@ function renderCalendar() {
     const evHtml = dayEvs.map(ev => {
       const c = EV_COLORS[ev.type]||'#9E9E9E';
       const meta = [ev.loc, ev.pad].filter(Boolean).join(' · ');
-      const titleTxt = `Fleet #${ev.fleetNum} · ${ev.label}${meta ? ' | '+meta : ''}`;
-      return `<div class="cal-ev" style="background:${c}" title="${titleTxt}"><span>#${ev.fleetNum} ${ev.label}${meta ? '<span style="opacity:0.8;font-weight:400"> · '+meta+'</span>' : ''}</span></div>`;
+      const metaEsc = esc(meta);
+      const titleTxt = `Fleet #${ev.fleetNum} · ${esc(ev.label)}${meta ? ' | '+metaEsc : ''}`;
+      return `<div class="cal-ev" style="background:${c}" title="${titleTxt}"><span>#${ev.fleetNum} ${esc(ev.label)}${meta ? '<span style="opacity:0.8;font-weight:400"> · '+metaEsc+'</span>' : ''}</span></div>`;
     }).join('');
     const isConflict = !!conflictDates[ds];
     if (isConflict) mConflictDays++;
