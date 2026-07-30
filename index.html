@@ -308,61 +308,7 @@
       border-left: 3px solid rgba(0,0,0,0.2);
     }
 
-    /* ===== GANTT ===== */
-    .gantt-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
-    .gantt-inner { min-width: 900px; }
-    .gantt-hdr { display: flex; background: var(--nav-bg); border-bottom: 2px solid var(--border); }
-    .gantt-lbl-col {
-      width: 190px; min-width: 190px; flex-shrink: 0;
-      padding: 10px 14px; font-size: 11px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.5px;
-      color: rgba(255,255,255,0.7);
-      border-right: 1px solid rgba(255,255,255,0.15);
-      position: sticky; left: 0; z-index: 6;
-      background: var(--nav-bg);
-      box-shadow: 2px 0 4px rgba(0,0,0,0.18);
-    }
-    .gantt-months { flex: 1; display: flex; overflow: hidden; }
-    .gantt-month-lbl { color: rgba(255,255,255,0.85); font-size: 11px; font-weight: 700; padding: 10px 8px; border-right: 1px solid rgba(255,255,255,0.15); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; flex-shrink: 0; }
-    .gantt-rows { }
-    .gantt-row { display: flex; border-bottom: 1px solid var(--border); }
-    .gantt-row:hover { background: var(--surface2); }
-    .gantt-row-lbl {
-      width: 190px; min-width: 190px; flex-shrink: 0;
-      padding: 7px 14px; font-size: 12px;
-      border-right: 1px solid var(--border);
-      display: flex; align-items: center; gap: 6px;
-      background: var(--surface);
-      position: sticky; left: 0; z-index: 4;
-      box-shadow: 2px 0 4px rgba(0,0,0,0.08);
-    }
-    .gantt-row-lbl.fleet-hdr {
-      background: var(--surface2);
-      font-weight: 700; font-size: 11px;
-      text-transform: uppercase; letter-spacing: 0.3px;
-      color: var(--text-secondary);
-      z-index: 5;
-    }
-    .gantt-track { flex: 1; position: relative; height: 34px; background: var(--surface); overflow: visible; }
-    .gantt-row.fleet-hdr-row .gantt-track { background: var(--surface2); }
-    .gantt-bar {
-      position: absolute; top: 5px; height: 24px; border-radius: 4px;
-      display: flex; align-items: center; padding: 0 6px;
-      font-size: 9.5px; font-weight: 700; color: #fff;
-      white-space: nowrap; overflow: hidden; cursor: pointer;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-      transition: transform 0.1s, box-shadow 0.1s;
-    }
-    .gantt-bar:hover, .gantt-bar:active {
-      transform: translateY(-1px);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
-      z-index: 3;
-    }
-    .gantt-today-line {
-      position: absolute; top: 0; bottom: 0; width: 2px;
-      background: #ef4444; z-index: 20; pointer-events: none;
-    }
-    .gantt-today-line::before { content: '▼'; position: absolute; top: -8px; left: -5px; font-size: 10px; color: #ef4444; }
+
 
     /* ===== FLEET DETAIL ===== */
     .fleet-page-header {
@@ -490,18 +436,7 @@
     .iron-leg { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); font-weight: 600; }
     .iron-dot { width: 11px; height: 11px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
     .iron-overview { display: flex; gap: 32px; align-items: center; flex-wrap: wrap; justify-content: center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); margin-bottom: 18px; }
-    .iron-donut { position: relative; width: 180px; height: 180px; flex-shrink: 0; }
-    .iron-donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .iron-donut-num { font-size: 34px; font-weight: 800; line-height: 1; }
-    .iron-donut-lbl { font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--text-secondary); margin-top: 3px; }
-    .iron-tot-legend { min-width: 250px; }
-    .iron-tot-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
-    .iron-tot-row:last-child { border-bottom: none; }
-    .iron-tot-state { flex: 1; font-weight: 600; }
-    .iron-tot-val { font-weight: 800; min-width: 44px; text-align: right; }
-    .iron-tot-pct { color: var(--text-secondary); min-width: 52px; text-align: right; font-size: 12px; }
-    .iron-tbl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-    @media (max-width: 820px) { .iron-tbl-grid { grid-template-columns: 1fr; } }
+
     .iron-tbl-title { font-weight: 800; font-size: 14px; margin-bottom: 8px; }
 
     /* ===== SKILL-DRIVEN ENHANCEMENTS (KPI cards, insight, filter, heatmap, ranked bars) ===== */
@@ -685,28 +620,7 @@
       .cal-dow { padding: 4px 0; font-size: 8px; }
     }
 
-    /* ===== GANTT MOBILE ===== */
-    @media (max-width: 640px) {
-      .gantt-inner { min-width: 640px; }
-      .gantt-lbl-col,
-      .gantt-row-lbl {
-        width: 110px; min-width: 110px;
-        padding: 6px 8px; font-size: 10.5px;
-      }
-      .gantt-row-lbl.gantt-row-lbl-sub { padding-left: 14px !important; font-size: 10px; }
-      .gantt-month-lbl { padding: 8px 4px; font-size: 10px; }
-      .gantt-track { height: 28px; }
-      .gantt-bar {
-        top: 4px; height: 20px; font-size: 8.5px; padding: 0 4px;
-        border-radius: 3px;
-      }
-    }
-    @media (max-width: 400px) {
-      .gantt-inner { min-width: 560px; }
-      .gantt-lbl-col,
-      .gantt-row-lbl { width: 96px; min-width: 96px; padding: 5px 6px; font-size: 10px; }
-      .gantt-row-lbl.gantt-row-lbl-sub { padding-left: 10px !important; font-size: 9.5px; }
-    }
+
 
     /* ===== PRINT ===== */
     @media print {
@@ -714,7 +628,6 @@
       .btn, .cal-controls button { display: none; }
       .panel { display: block !important; page-break-before: always; }
       .panel:first-of-type { page-break-before: auto; }
-      .gantt-wrap { overflow: visible; }
     }
   </style>
 </head>
@@ -826,10 +739,19 @@
 // ============================================================
 //  CONFIG — Replace with your deployed Apps Script Web App URL
 // ============================================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbxzRn4DcbgvNJm432aNPTYE91QWNlrA79s8KG_aMtgYTtbFRqh57l76l8fH_QMWHCqMUg/exec';
-const CONSUMABLES_CSV = 'https://docs.google.com/spreadsheets/d/1CMaUWBn1nuJBenNoPntFcLkxMsBP9N5r9pEaynnFyUE/export?format=csv&gid=1240111420';
-var IRON_SHEET = '1c91kuPxopI-aPNaRQHLgzvdpqHpU5aZqjqqA2sRuXqs';
-var IRON_TABS = { deployed:'783802398', rebuild:'1509964271', available:'1139183602', totals:'1875470645' };
+const CONFIG = {
+  apiUrl: 'https://script.google.com/macros/s/AKfycbxzRn4DcbgvNJm432aNPTYE91QWNlrA79s8KG_aMtgYTtbFRqh57l76l8fH_QMWHCqMUg/exec',
+  consumablesId: '1CMaUWBn1nuJBenNoPntFcLkxMsBP9N5r9pEaynnFyUE', consumablesGid: '1240111420',
+  ironId: '1c91kuPxopI-aPNaRQHLgzvdpqHpU5aZqjqqA2sRuXqs',
+  ironTabs: { deployed:'783802398', rebuild:'1509964271', available:'1139183602', totals:'1875470645' },
+  timeouts: { fleet: 35000, consumables: 10000, iron: 12000 },
+  refreshMs: 5 * 60 * 1000
+};
+function sheetCsv(id, gid){ return 'https://docs.google.com/spreadsheets/d/' + id + '/export?format=csv&gid=' + gid; }
+const API_URL = CONFIG.apiUrl;
+const CONSUMABLES_CSV = sheetCsv(CONFIG.consumablesId, CONFIG.consumablesGid);
+var IRON_SHEET = CONFIG.ironId;
+var IRON_TABS = CONFIG.ironTabs;
 var IRON_COLORS = { Deployed:'#F4A62A', Complete:'#2E9E4F', Completed:'#2E9E4F', Paint:'#4A90D9', Rebuild:'#3949AB', Machine:'#00838F', 'Not Started':'#9AA0A6', Unstarted:'#9AA0A6' };
 var ironData = null;
 var ironSub = (typeof localStorage!=='undefined' && localStorage.getItem('evo-iron-sub')) || 'deployed';
@@ -841,7 +763,7 @@ const UPLOAD_URL = ''; // set to the deployed Apps Script upload endpoint (optio
 //  CONSTANTS
 // ============================================================
 const FLEET_COLORS = {
-  '1':'#1565C0','6':'#2E7D32','9':'#6A1B9A',
+  '6':'#2E7D32','9':'#6A1B9A',
   '10':'#E65100','13':'#00695C','15':'#AD1457'
 };
 const EV_COLORS = {
@@ -874,7 +796,7 @@ let calYear, calMonth;
   showPanel(panel);
 
   refreshData();
-  setInterval(refreshData, 5 * 60 * 1000);
+  setInterval(refreshData, CONFIG.refreshMs);
 })();
 
 // ============================================================
@@ -925,16 +847,9 @@ function loadFleets() {
   const btn = document.getElementById('refreshBtn');
   btn.classList.add('spinning');
 
-  if (API_URL === 'PASTE_APPS_SCRIPT_URL_HERE') {
-    setStatus('warning', '⚠️ Dashboard running in DEMO MODE — API_URL not yet configured. Real data will appear after the Apps Script Web App is deployed and the URL is pasted in.');
-    loadDemoData();
-    btn.classList.remove('spinning');
-    return;
-  }
-
   setStatus('loading', '⏳ Loading live schedule…');
   // Feed is heavy (Apps Script reads each fleet tab cell-by-cell, ~20s), so allow ample time.
-  fetchT(API_URL, 35000)
+  fetchT(API_URL, CONFIG.timeouts.fleet)
     .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(data => {
       if (data.error) throw new Error(data.error);
@@ -1028,7 +943,7 @@ function kpiStrip(cards){
 
 function loadConsumables() {
   if (!document.getElementById('panel-consumables')) return;
-  fetchT(CONSUMABLES_CSV, 10000)
+  fetchT(CONSUMABLES_CSV, CONFIG.timeouts.consumables)
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
     .then(function(txt){
       var rows = parseCSV_(txt).filter(function(r){ return r.some(function(c){ return (c||'').trim()!==''; }); });
@@ -1146,8 +1061,8 @@ function loadIron(){
   if(!document.getElementById('panel-iron')) return;
   var keys=Object.keys(IRON_TABS);
   Promise.all(keys.map(function(k){
-    var url='https://docs.google.com/spreadsheets/d/'+IRON_SHEET+'/export?format=csv&gid='+IRON_TABS[k];
-    return fetchT(url,12000).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); }).then(function(t){ return parseCSV_(t).map(function(r){ return r.map(cleanVal); }); });
+    var url=sheetCsv(IRON_SHEET, IRON_TABS[k]);
+    return fetchT(url,CONFIG.timeouts.iron).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); }).then(function(t){ return parseCSV_(t).map(function(r){ return r.map(cleanVal); }); });
   })).then(function(res){
     ironData={ deployed:parseDeployed_(res[0]), rebuild:parseRebuild_(res[1]), available:parseAvailable_(res[2]), totals:parseTotals_(res[3]), live:true };
     renderIron();
@@ -1737,168 +1652,6 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Gantt bar tap → show that single event's full details in the same modal
-let ganttBarEvents = [];
-function openGanttBarDetail(idx) {
-  const ev = ganttBarEvents[idx];
-  if (!ev) return;
-  const c = EV_COLORS[ev.type]||'#9E9E9E';
-  const icon = (typeof EV_ICONS !== 'undefined' && EV_ICONS[ev.type]) || '•';
-  const locPad = [ev.loc, ev.pad ? 'Pad '+ev.pad : ''].filter(Boolean).join(' · ');
-  const dt = (ev.start && ev.end && ev.start !== ev.end)
-              ? fmtRange(ev.start, ev.end)
-              : (fmt(ev.start) || ev.start);
-  const timePart = ev.time ? `<span class="dm-time">⏰ ${esc(ev.time)}</span>` : '';
-  document.getElementById('dayModalTitle').textContent = `Fleet #${ev.fleetNum} · ${ev.fleetName||''}`.trim();
-  document.getElementById('dayModalBody').innerHTML = `<div class="dm-event">
-    <div class="dm-bar" style="background:${c}"></div>
-    <div class="dm-body">
-      <div class="dm-title" style="color:${c}">
-        <span style="font-size:16px">${icon}</span>
-        <span>${esc(ev.label)}</span>
-        <span class="dm-fleet-tag">FLEET #${ev.fleetNum}</span>
-      </div>
-      <div class="dm-row"><div class="dm-lbl">Location & Pad</div>
-        <div class="dm-val${locPad?'':' empty'}">${locPad ? esc(locPad) : 'Not specified'}</div></div>
-      <div class="dm-row"><div class="dm-lbl">Date & Time</div>
-        <div class="dm-val">${dt || ''}${timePart}</div></div>
-      <div class="dm-row"><div class="dm-lbl">Shift</div>
-        <div class="dm-val${ev.shift?'':' empty'}">${ev.shift || 'Not specified'}</div></div>
-    </div>
-  </div>`;
-  document.getElementById('dayModalBg').classList.add('show');
-}
-
-// ============================================================
-//  GANTT TAB
-// ============================================================
-function renderGantt() {
-  if (!appData) return;
-
-  // Date range
-  let minDate=null, maxDate=null;
-  appData.fleets.forEach(f => collectEvents(f).forEach(ev => {
-    if (!ev.start) return;
-    if (!minDate||ev.start<minDate) minDate=ev.start;
-    const e=ev.end||ev.start;
-    if (!maxDate||e>maxDate) maxDate=e;
-  }));
-
-  if (!minDate) {
-    document.getElementById('ganttInner').innerHTML = '<div class="no-data"><div class="no-data-icon">📭</div><p>No events to display.</p></div>';
-    return;
-  }
-
-  const rangeStart = parseDate(minDate); rangeStart.setDate(rangeStart.getDate()-7);
-  const rangeEnd   = parseDate(maxDate); rangeEnd.setDate(rangeEnd.getDate()+7);
-  const totalDays  = Math.round((rangeEnd-rangeStart)/86400000)+1;
-
-  function pct(dateStr) {
-    const d=parseDate(dateStr); if (!d) return 0;
-    return Math.round((d-rangeStart)/86400000)/totalDays*100;
-  }
-  function wPct(s,e) {
-    const sd=parseDate(s), ed=parseDate(e||s); if(!sd||!ed) return 0.5;
-    return Math.max((Math.round((ed-sd)/86400000)+1)/totalDays*100, 0.4);
-  }
-
-  // Month header labels
-  let monthHtml='', cur=new Date(rangeStart);
-  while (cur<=rangeEnd) {
-    const mStart=new Date(cur.getFullYear(),cur.getMonth(),1);
-    const mEnd=new Date(cur.getFullYear(),cur.getMonth()+1,0);
-    const capS=cur>mStart?cur:mStart;
-    const capE=rangeEnd<mEnd?rangeEnd:mEnd;
-    const w=(Math.round((capE-capS)/86400000)+1)/totalDays*100;
-    monthHtml+=`<div class="gantt-month-lbl" style="width:${w}%;flex-shrink:0">${MONTH_SHORT[cur.getMonth()]} ${cur.getFullYear()}</div>`;
-    cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);
-  }
-
-  // Today line
-  const todayLeft=pct(todayISO());
-  const todayLine=`<div class="gantt-today-line" style="left:${todayLeft}%"></div>`;
-
-  // Event definitions
-  const EVDEFS = [
-    {key:'rigdown',     label:'Rig Down',      sF:f=>f.rigDown.date, eF:f=>f.rigDown.date},
-    {key:'rigdown_log', label:'RD Logistics',  sF:f=>f.rigDown.logisticsDate, eF:f=>f.rigDown.logisticsDate},
-    {key:'roustabout',  label:'RD Roustabout', sF:f=>f.rigDown.roustabout&&f.rigDown.roustabout.start, eF:f=>f.rigDown.roustabout&&f.rigDown.roustabout.end},
-    {key:'misc',        label:'RD Misc',       sF:f=>f.rigDown.misc&&f.rigDown.misc.start,       eF:f=>f.rigDown.misc&&f.rigDown.misc.end},
-    {key:'rigup',       label:'Rig Up',        sF:f=>f.rigUp.date, eF:f=>f.rigUp.date},
-    {key:'rigup_log',   label:'RU Logistics',  sF:f=>f.rigUp.logisticsDate, eF:f=>f.rigUp.logisticsDate},
-    {key:'roustabout2', label:'RU Roustabout', sF:f=>f.rigUp.roustabout&&f.rigUp.roustabout.start, eF:f=>f.rigUp.roustabout&&f.rigUp.roustabout.end, color:'#7B1FA2'},
-    {key:'misc2',       label:'RU Misc',       sF:f=>f.rigUp.misc&&f.rigUp.misc.start,       eF:f=>f.rigUp.misc&&f.rigUp.misc.end, color:'#E65100'},
-  ];
-
-  let rowsHtml='';
-  ganttBarEvents = [];
-  appData.fleets.forEach(f => {
-    const fc=FLEET_COLORS[f.num]||'#1565C0';
-    rowsHtml+=`<div class="gantt-row fleet-hdr-row">
-      <div class="gantt-row-lbl fleet-hdr" style="border-left:3px solid ${fc}">Fleet #${f.num} · ${esc(f.shortName)}</div>
-      <div class="gantt-track" style="background:var(--surface2)">${todayLine}</div>
-    </div>`;
-    EVDEFS.forEach(def => {
-      const s=def.sF(f), e=def.eF(f);
-      if (!s) return;
-      const color=def.color||EV_COLORS[def.key]||'#9E9E9E';
-      const l=pct(s), w=wPct(s,e||s);
-      const barLabel = w>6 ? def.label : '';
-      // Resolve event "type" key for icon/color/shift lookup (strip trailing 2 from rigup variants)
-      const evType = def.key.replace(/2$/,'');
-      // Build the event payload to show in the modal on tap
-      const side = (def.key.startsWith('rigup') || def.key === 'roustabout2' || def.key === 'misc2') ? f.rigUp : f.rigDown;
-      let shift = '';
-      if (def.key === 'roustabout' || def.key === 'roustabout2') {
-        const r = side.roustabout || {};
-        const parts = [];
-        if (r.dayShift)   parts.push('DAY SHIFT ☀️'  + (r.dayQty?  ' ('+r.dayQty+  ' techs)':''));
-        if (r.nightShift) parts.push('NIGHT SHIFT 🌙' + (r.nightQty?' ('+r.nightQty+' techs)':''));
-        shift = parts.join(' · ');
-      } else {
-        const parts = [];
-        if (side.dayShift)   parts.push('DAY SHIFT ☀️');
-        if (side.nightShift) parts.push('NIGHT SHIFT 🌙');
-        if (side.hotel)      parts.push('HOTEL 🏨');
-        shift = parts.join(' · ');
-      }
-      // Resolve the matching time field for this event def
-      let timeVal = '';
-      if (def.key === 'rigdown')          timeVal = side.time;
-      else if (def.key === 'rigdown_log') timeVal = side.logisticsTime;
-      else if (def.key === 'rigup')       timeVal = side.time;
-      else if (def.key === 'rigup_log')   timeVal = side.logisticsTime;
-      else if (def.key === 'roustabout' || def.key === 'roustabout2') timeVal = (side.roustabout && side.roustabout.startTime) || '';
-      else if (def.key === 'misc' || def.key === 'misc2')             timeVal = (side.misc && side.misc.startTime) || '';
-      const barIdx = ganttBarEvents.length;
-      ganttBarEvents.push({
-        type: evType,
-        label: def.label,
-        start: s, end: e || s,
-        time: timeVal,
-        loc: side.location, pad: side.pad,
-        shift: shift,
-        fleetNum: f.num,
-        fleetName: f.shortName
-      });
-      rowsHtml+=`<div class="gantt-row">
-        <div class="gantt-row-lbl gantt-row-lbl-sub" style="padding-left:24px;font-size:11px">${def.label}</div>
-        <div class="gantt-track">
-          ${todayLine}
-          <div class="gantt-bar" data-bar-idx="${barIdx}" onclick="openGanttBarDetail(${barIdx})" style="left:${l}%;width:${w}%;background:${color}" title="Fleet #${f.num}: ${def.label} | ${fmtRange(s,e)||s}">${barLabel}</div>
-        </div>
-      </div>`;
-    });
-  });
-
-  document.getElementById('ganttInner').innerHTML = `
-    <div class="gantt-hdr">
-      <div class="gantt-lbl-col">Fleet / Event</div>
-      <div class="gantt-months" style="flex:1;overflow:hidden">${monthHtml}</div>
-    </div>
-    <div class="gantt-rows">${rowsHtml}</div>`;
-}
-
 // ============================================================
 //  FLEET DETAIL PANELS
 // ============================================================
@@ -2229,46 +1982,7 @@ function dRangeRow(label, rangeObj) {
 // ============================================================
 //  DEMO DATA
 // ============================================================
-function loadDemoData() {
-  function addDays(n) {
-    const d=new Date(); d.setDate(d.getDate()+n);
-    return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
-  }
-  appData = { lastUpdated: new Date().toISOString(), fleets: [
-    { num:'1',  name:'FLEET # 1 - Lindsay Riley',  shortName:'Lindsay Riley',
-      rigDown:{ location:'Eagle Ford', pad:'Pad A-1', date:addDays(-2), logisticsDate:addDays(-5),
-                roustabout:{start:addDays(-1),end:addDays(1)}, misc:{start:addDays(-1),end:addDays(0)} },
-      rigUp:  { location:'Permian Basin', pad:'Pad B-3', date:addDays(5), logisticsDate:addDays(3),
-                roustabout:{start:addDays(4),end:addDays(7)}, misc:{start:addDays(4),end:addDays(5)} } },
-    { num:'6',  name:'FLEET # 6 - Brandon Dock',   shortName:'Brandon Dock',
-      rigDown:{ location:'Haynesville', pad:'Pad C-7', date:addDays(3), logisticsDate:addDays(1),
-                roustabout:{start:addDays(2),end:addDays(4)}, misc:{start:addDays(3),end:addDays(4)} },
-      rigUp:  { location:'Haynesville', pad:'Pad D-2', date:addDays(14), logisticsDate:addDays(12),
-                roustabout:{start:addDays(13),end:addDays(16)}, misc:{start:addDays(13),end:addDays(14)} } },
-    { num:'9',  name:'FLEET # 9 - Eric Cronberg',  shortName:'Eric Cronberg',
-      rigDown:{ location:'Marcellus', pad:'Pad E-5', date:addDays(10), logisticsDate:addDays(8),
-                roustabout:{start:addDays(9),end:addDays(11)}, misc:{start:addDays(9),end:addDays(10)} },
-      rigUp:  { location:'Marcellus', pad:'Pad F-8', date:addDays(20), logisticsDate:addDays(18),
-                roustabout:{start:addDays(19),end:addDays(22)}, misc:null } },
-    { num:'10', name:'FLEET # 10 - Corey Miller',  shortName:'Corey Miller',
-      rigDown:{ location:'Utica', pad:'Pad G-3', date:addDays(-10), logisticsDate:addDays(-13),
-                roustabout:{start:addDays(-11),end:addDays(-9)}, misc:{start:addDays(-11),end:addDays(-10)} },
-      rigUp:  { location:'DJ Basin', pad:'Pad H-1', date:addDays(7), logisticsDate:addDays(5),
-                roustabout:{start:addDays(6),end:addDays(9)}, misc:{start:addDays(6),end:addDays(7)} } },
-    { num:'13', name:'FLEET # 13 - Ryan Poorman',  shortName:'Ryan Poorman',
-      rigDown:{ location:'Niobrara', pad:'Pad I-2', date:addDays(0), logisticsDate:addDays(-2),
-                roustabout:{start:addDays(-1),end:addDays(1)}, misc:{start:addDays(0),end:addDays(1)} },
-      rigUp:  { location:'Niobrara', pad:'Pad J-6', date:addDays(12), logisticsDate:addDays(10),
-                roustabout:{start:addDays(11),end:addDays(14)}, misc:null } },
-    { num:'15', name:'FLEET # 15 - Jeremy Bower',  shortName:'Jeremy Bower',
-      rigDown:{ location:'Wattenberg', pad:'Pad K-4', date:addDays(6), logisticsDate:addDays(4),
-                roustabout:{start:addDays(5),end:addDays(7)}, misc:{start:addDays(5),end:addDays(6)} },
-      rigUp:  { location:'Wattenberg', pad:'Pad L-9', date:addDays(18), logisticsDate:addDays(16),
-                roustabout:{start:addDays(17),end:addDays(20)}, misc:{start:addDays(17),end:addDays(18)} } },
-  ]};
-  renderAll();
-  document.getElementById('lastUpdated').innerHTML = '⚠️ DEMO MODE';
-}
+
 
 // ============================================================
 //  PANEL / TAB SWITCHING
