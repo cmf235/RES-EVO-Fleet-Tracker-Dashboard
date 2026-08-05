@@ -1221,7 +1221,7 @@ function renderIronDeployed(){
   var maxCell=1;
   d.types.forEach(function(t){ d.fleets.forEach(function(f){ var n=ironNum((d.counts[f.label]||{})[t]); if(n>maxCell) maxCell=n; }); });
   var head='<th class="iron-sticky">Equipment</th>'+d.fleets.map(function(f){
-    return '<th class="iron-fleet"><span class="iron-fleet-name">'+esc(f.label)+'</span><span class="iron-fleet-pad">'+esc(f.pad||'&mdash;')+'</span></th>';
+    return '<th class="iron-fleet"><span class="iron-fleet-name">'+esc(f.label)+'</span><span class="iron-fleet-pad">'+(f.pad?esc(f.pad):'&mdash;')+'</span></th>';
   }).join('')+'<th class="ic">Total</th>';
   var body=d.types.map(function(t){
     var rowTotal=0;
