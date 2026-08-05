@@ -586,7 +586,7 @@
       /* Calendar controls fit one row */
       .cal-controls { gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
       .cal-month-lbl { min-width: 0; flex: 1; font-size: 14px; }
-      .cal-nav-btn { width: 30px; height: 30px; font-size: 16px; }
+      .cal-nav-btn { width: 44px; height: 44px; font-size: 16px; }
       .cal-today-btn { padding: 4px 10px; font-size: 11px; margin-left: 0; }
 
       /* Legend: tighter spacing */
@@ -629,6 +629,15 @@
       .panel { display: block !important; page-break-before: always; }
       .panel:first-of-type { page-break-before: auto; }
     }
+    /* O-3: visible keyboard-focus indicator for every interactive control (WCAG 2.4.7) */
+    .nav-tab:focus-visible, .card:focus-visible, .cal-cell:focus-visible, button:focus-visible,
+    .file-btn:focus-visible, .iron-subtab:focus-visible, a:focus-visible, input:focus-visible,
+    [role="button"]:focus-visible, [tabindex]:focus-visible {
+      outline: 3px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    .nav-tab[aria-current="page"] { font-weight: 700; }
   </style>
 </head>
 <body>
@@ -800,6 +809,19 @@ var _dirty = { fleet:false, consumables:false, iron:false };
 
   refreshData();
   startAutoRefresh();
+})();
+
+// O-3: keyboard accessibility — make the click-only nav tabs / summary cards / calendar
+// days reachable (tabindex) and operable (Enter/Space). Focus outlines are in the CSS.
+(function a11yInit(){
+  document.querySelectorAll('.nav-tab').forEach(function(t){ t.setAttribute('role','button'); t.setAttribute('tabindex','0'); });
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+    var el = e.target;
+    if (el && el.getAttribute && el.getAttribute('role') === 'button' && typeof el.click === 'function') {
+      e.preventDefault(); el.click();
+    }
+  });
 })();
 
 // ============================================================
@@ -1476,7 +1498,7 @@ function summaryCard(f) {
     ru.misc&&ru.misc.start             && evRow('misc',       'RU Misc',        ru.misc.start,       ru.misc.end,        ru.misc.startTime),
   ].filter(Boolean).join('');
 
-  return `<div class="card" onclick="showPanel('fleet-${f.num}')" style="cursor:pointer;transition:box-shadow 0.15s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)'" onmouseout="this.style.boxShadow=''">
+  return `<div class="card" role="button" tabindex="0" aria-label="Open Fleet #${f.num} details" onclick="showPanel('fleet-${f.num}')" style="cursor:pointer;transition:box-shadow 0.15s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)'" onmouseout="this.style.boxShadow=''">
     <div class="summary-card-header">
       <div class="fleet-badge" style="background:${color}">${f.num}</div>
       <div>
@@ -1599,7 +1621,7 @@ function renderCalendar() {
     }).join('');
     const isConflict = !!conflictDates[ds];
     if (isConflict) mConflictDays++;
-    html += `<div class="cal-cell${isToday?' cal-today':''}${isConflict?' cal-conflict':''}" data-date="${ds}" onclick="openDayDetail('${ds}')"><div class="cal-day-num">${d}</div>${evHtml}</div>`;
+    html += `<div class="cal-cell${isToday?' cal-today':''}${isConflict?' cal-conflict':''}" data-date="${ds}" role="button" tabindex="0" aria-label="${MONTH_NAMES[calMonth]} ${d}${isConflict?', schedule conflict':''}" onclick="openDayDetail('${ds}')"><div class="cal-day-num">${d}</div>${evHtml}</div>`;
   }
   // Next month padding
   const used = firstDow + daysInMonth;
@@ -1858,19 +1880,12 @@ function fleetPanel(f) {
 // ============================================================
 //  RIG UP DRAWING + CERTIFICATION PACKET 
 // ============================================================
-// Files picked in the browser are held here so preview + download work even
-// before the upload backend exists. Once UPLOAD_URL is set and the Apps Script
-// backend returns f.files.<kind> = {url,name}, those shared links take over.
-var pendingFiles = {};
-var _PNG='image/png,.png', _DWG='.dwg,application/acad,image/vnd.dwg', _ZIP='.zip,application/zip,application/x-zip-compressed';
-var FILE_ACCEPT = { drawing:_PNG, pumpdrawing:_PNG, dwg:_DWG, pumpdwg:_DWG, cert:_ZIP, pumpcert:_ZIP };
+// File cards are URL-driven: the drawing / DWG / packet links come from the fleet
+// sheet (fleet.files.<kind>.url) via the Apps Script feed. Display + open only.
 
 function fileMeta(f, kind) {
   var rec = (f.files || {})[kind];
-  if (rec && rec.url) return { url:rec.url, name:rec.name || kind, source:'server' };
-  var pend = (pendingFiles[f.num] || {})[kind];
-  if (pend) return { url:pend.url, name:pend.name, source:'local' };
-  return null;
+  return (rec && rec.url) ? { url:rec.url, name:rec.name || kind, source:'server' } : null;
 }
 
 function filesSection(f) {
@@ -1914,75 +1929,11 @@ function certCardHtml(f, num, title, certKind) {
     + '</div></div></div>';
 }
 
-function statusKindFor(kind) {
-  if (kind === 'dwg') return 'drawing';
-  if (kind === 'pumpdwg') return 'pumpdrawing';
-  return kind;
-}
-
-function backendNoteBlock() {
-  if (typeof UPLOAD_URL !== 'undefined' && UPLOAD_URL) return '';
-  return '<div class="file-note" style="margin-top:14px">&#9888;&#65039; Uploads currently preview &amp; download in your browser only &mdash; they are <b>not saved or shared</b> yet. Deploy the Apps Script backend and set <code>UPLOAD_URL</code> to store files per fleet and share them with your team.</div>';
-}
-
-function pickAndUpload(num, kind) {
-  var input = document.createElement('input');
-  input.type = 'file';
-  input.accept = FILE_ACCEPT[kind] || '';
-  input.style.display = 'none';
-  input.onchange = function() {
-    if (input.files && input.files[0]) handleUpload(num, kind, input.files[0]);
-    if (input.parentNode) input.parentNode.removeChild(input);
-  };
-  document.body.appendChild(input);
-  input.click();
-}
-
-function handleUpload(num, kind, file) {
-  pendingFiles[num] = pendingFiles[num] || {};
-  pendingFiles[num][kind] = { file:file, name:file.name, url:URL.createObjectURL(file) };
-  rerenderFleet(num);
-
-  var statusEl = document.getElementById('status-' + statusKindFor(kind) + '-' + num);
-  if (typeof UPLOAD_URL === 'undefined' || !UPLOAD_URL) {
-    if (statusEl) statusEl.textContent = '✔ ' + file.name + ' loaded locally (not saved — backend not connected).';
-    return;
-  }
-  if (statusEl) statusEl.textContent = '⏳ Uploading ' + file.name + '…';
-  var reader = new FileReader();
-  reader.onload = function() {
-    var base64 = String(reader.result).split(',')[1] || '';
-    fetch(UPLOAD_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action:'upload', fleet:num, kind:kind, filename:file.name, mimeType:file.type || 'application/octet-stream', dataBase64:base64 })
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(res){
-      if (!res || !res.ok) throw new Error((res && res.error) || 'Upload failed');
-      if (statusEl) statusEl.textContent = '✔ Saved: ' + (res.name || file.name);
-      refreshData();
-    })
-    .catch(function(err){ if (statusEl) statusEl.textContent = '❌ ' + err.message; });
-  };
-  reader.readAsDataURL(file);
-}
-
-function rerenderFleet(num) {
-  var f = ((appData && appData.fleets) || []).filter(function(x){ return String(x.num) === String(num); })[0];
-  var el = document.getElementById('panel-fleet-' + num);
-  if (f && el) el.innerHTML = fleetPanel(f);
-}
-
 function downloadFile(num, kind) {
   var f = ((appData && appData.fleets) || []).filter(function(x){ return String(x.num) === String(num); })[0];
   if (!f) return;
   var meta = fileMeta(f, kind);
-  if (!meta || !meta.url) return;
-  if (meta.source === 'server') { window.open(meta.url, '_blank'); return; }
-  var a = document.createElement('a');
-  a.href = meta.url; a.download = meta.name || (kind + '-fleet' + num);
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  if (meta && meta.url) window.open(meta.url, '_blank');
 }
 
 function dRow(label, value, end, isDate) {
@@ -2022,11 +1973,11 @@ function dRangeRow(label, rangeObj) {
 function showPanel(id) {
   if (!document.getElementById('panel-'+id)) id = 'summary';
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => { t.classList.remove('active'); t.removeAttribute('aria-current'); });
   const panel = document.getElementById('panel-'+id);
   if (panel) panel.classList.add('active');
   const tab = document.querySelector('[data-panel="'+id+'"]');
-  if (tab) { tab.classList.add('active'); tab.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); }
+  if (tab) { tab.classList.add('active'); tab.setAttribute('aria-current','page'); tab.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); }
   localStorage.setItem('evo-panel', id);
   // H-3: a data refresh that arrived while this source was off-screen was deferred; render it now.
   var _src = _activeSource();
