@@ -778,6 +778,9 @@ const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 let appData = null;
 let calYear, calMonth;
+// H-3 state — declared before init() so init()->showPanel() can safely read _dirty.
+var _refreshTimer = null, _skippedHidden = false;
+var _dirty = { fleet:false, consumables:false, iron:false };
 
 // ============================================================
 //  INIT
@@ -796,7 +799,7 @@ let calYear, calMonth;
   showPanel(panel);
 
   refreshData();
-  setInterval(refreshData, CONFIG.refreshMs);
+  startAutoRefresh();
 })();
 
 // ============================================================
@@ -836,6 +839,32 @@ function fleetErrorUI(){
     + '<button onclick="refreshData()" style="margin-top:14px;padding:8px 18px;border:1px solid var(--primary);background:var(--primary);color:#fff;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer">&#8635; Try again</button>'
     + '</div>';
 }
+
+// ============================================================
+//  H-3: visibility-gated auto-refresh + active-tab rendering
+// ============================================================
+// (State vars _refreshTimer/_skippedHidden/_dirty live up in the module state
+// block so init()'s showPanel() can read them.) Don't fetch or rebuild the DOM
+// in a background tab; catch up once on return. And only render the panel on
+// screen — the other two data sources rebuild lazily on tab switch (see showPanel).
+function _activeSource(){
+  var c = document.getElementById('panel-consumables');
+  if (c && c.classList.contains('active')) return 'consumables';
+  var i = document.getElementById('panel-iron');
+  if (i && i.classList.contains('active')) return 'iron';
+  return 'fleet';
+}
+function autoRefreshTick(){
+  if (document.hidden) { _skippedHidden = true; return; }   // background tab: skip entirely
+  refreshData();
+}
+function startAutoRefresh(){
+  if (_refreshTimer) clearInterval(_refreshTimer);
+  _refreshTimer = setInterval(autoRefreshTick, CONFIG.refreshMs);
+}
+document.addEventListener('visibilitychange', function(){
+  if (!document.hidden && _skippedHidden) { _skippedHidden = false; refreshData(); }  // catch up once
+});
 
 function refreshData() {
   loadConsumables();
@@ -961,6 +990,7 @@ function consumSearchFocused_(){ var sb = document.getElementById('consumSearch'
 function renderConsumables(){
   var el = document.getElementById('panel-consumables');
   if (!el || !consumHeaders) return;
+  if (!el.classList.contains('active')) { _dirty.consumables = true; return; }
   if (consumSearchFocused_()) return; // Q-6: don't rebuild the table while the user is typing in the filter
   el.innerHTML = consumablesHtml(consumHeaders, consumRows || [], consumSnapshot, consumErr);
   applyConsumFilter();
@@ -1115,6 +1145,7 @@ function showIronSub(name){ ironSub=name; try{ localStorage.setItem('evo-iron-su
 
 function renderIron(){
   var host=document.getElementById('panel-iron'); if(!host) return;
+  if(!host.classList.contains('active')){ _dirty.iron = true; return; }
   var subs=[['deployed','Deployed'],['processing','Processing'],['available','Available'],['overview','Asset Overview']];
   var nav=subs.map(function(s){ return '<button class="iron-subtab'+(ironSub===s[0]?' active':'')+'" onclick="showIronSub(&#39;'+s[0]+'&#39;)">'+s[1]+'</button>'; }).join('');
   var banner;
@@ -1252,6 +1283,7 @@ function renderIronOverview(){
 
 function renderAll() {
   if (!appData) return;
+  if (_activeSource() !== 'fleet') { _dirty.fleet = true; return; }
   // Fleet #1 removed from the dashboard
   if (Array.isArray(appData.fleets)) {
     appData.fleets = appData.fleets.filter(f => String(f.num) !== '1');
@@ -1996,6 +2028,11 @@ function showPanel(id) {
   const tab = document.querySelector('[data-panel="'+id+'"]');
   if (tab) { tab.classList.add('active'); tab.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); }
   localStorage.setItem('evo-panel', id);
+  // H-3: a data refresh that arrived while this source was off-screen was deferred; render it now.
+  var _src = _activeSource();
+  if (_src === 'fleet' && _dirty.fleet) { _dirty.fleet = false; renderAll(); }
+  else if (_src === 'consumables' && _dirty.consumables) { _dirty.consumables = false; renderConsumables(); }
+  else if (_src === 'iron' && _dirty.iron) { _dirty.iron = false; renderIron(); }
 }
 
 // ============================================================
