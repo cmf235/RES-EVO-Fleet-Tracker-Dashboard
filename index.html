@@ -1881,8 +1881,14 @@ function fleetPanel(f) {
     + '</div></div>'
     + padInfoBox(f)
     + '<div class="fleet-detail-grid">'
-    + sideCard(ru, '🟢&nbsp; Rig Up',   'rigup', f.gid)
-    + sideCard(rd, '🔴&nbsp; Rig Down', 'rigdown', f.gid)
+    + '<div class="ff-col">'
+    +   sideCard(ru, '🟢&nbsp; Rig Up',   'rigup', f.gid)
+    +   certCardHtml(f, f.num, 'Rig Up Certification Packet',   'cert')
+    + '</div>'
+    + '<div class="ff-col">'
+    +   sideCard(rd, '🔴&nbsp; Rig Down', 'rigdown', f.gid)
+    +   certCardHtml(f, f.num, 'Rig Down Certification Packet', 'certDown')
+    + '</div>'
     + '</div>'
     + filesSection(f);
 }
@@ -1902,8 +1908,6 @@ function filesSection(f) {
   return '<div class="fleet-files-grid">'
     + drawingCardHtml(f, num, 'Rig Up Drawing',   'drawing',     'dwg')
     + drawingCardHtml(f, num, 'Pumpdown Drawing', 'pumpdrawing', null)
-    + certCardHtml(f, num, 'Rig Up Certification Packet',   'cert')
-    + certCardHtml(f, num, 'Rig Down Certification Packet', 'certDown')
     + '</div>';
 }
 
