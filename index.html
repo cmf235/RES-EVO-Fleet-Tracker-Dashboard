@@ -331,8 +331,13 @@
     .section-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
     .sc-header {
       padding: 14px 18px; display: flex; align-items: center; gap: 10px;
+      justify-content: space-between;
       font-weight: 700; font-size: 15px; border-bottom: 2px solid;
     }
+    .sc-edit { font-size: 11px; font-weight: 600; color: inherit; text-decoration: none;
+      background: rgba(255,255,255,0.7); border: 1px solid rgba(0,0,0,0.12);
+      padding: 3px 9px; border-radius: 6px; white-space: nowrap; opacity: 0.9; }
+    .sc-edit:hover { opacity: 1; text-decoration: underline; }
     .sc-header.rigdown { background: var(--rigdown-bg); border-bottom-color: var(--rigdown); color: var(--rigdown); }
     .sc-header.rigup   { background: var(--rigup-bg);   border-bottom-color: var(--rigup);   color: var(--rigup); }
 
@@ -667,7 +672,6 @@
   <div class="nav-tab"        data-panel="calendar" onclick="showPanel('calendar')">📅 Calendar</div>
   <div class="nav-tab"        data-panel="fleet-6"  onclick="showPanel('fleet-6')"><span class="nav-dot" style="background:#2E7D32"></span>Fleet #6</div>
   <div class="nav-tab"        data-panel="fleet-9"  onclick="showPanel('fleet-9')"><span class="nav-dot" style="background:#6A1B9A"></span>Fleet #9</div>
-  <div class="nav-tab"        data-panel="fleet-10" onclick="showPanel('fleet-10')"><span class="nav-dot" style="background:#E65100"></span>Fleet #10</div>
   <div class="nav-tab"        data-panel="fleet-13" onclick="showPanel('fleet-13')"><span class="nav-dot" style="background:#00695C"></span>Fleet #13</div>
   <div class="nav-tab"        data-panel="fleet-15" onclick="showPanel('fleet-15')"><span class="nav-dot" style="background:#AD1457"></span>Fleet #15</div>
   <div class="nav-tab"        data-panel="consumables" onclick="showPanel('consumables')">📦 Consumables Inventory</div>
@@ -737,7 +741,6 @@
   <!-- FLEET PANELS -->
   <div class="panel" id="panel-fleet-6"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
   <div class="panel" id="panel-fleet-9"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
-  <div class="panel" id="panel-fleet-10"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
   <div class="panel" id="panel-fleet-13"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
   <div class="panel" id="panel-fleet-15"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
   <div class="panel" id="panel-consumables"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading inventory…</p></div></div>
@@ -754,7 +757,8 @@ const CONFIG = {
   ironId: '1c91kuPxopI-aPNaRQHLgzvdpqHpU5aZqjqqA2sRuXqs',
   ironTabs: { deployed:'783802398', rebuild:'1509964271', available:'1139183602', totals:'1875470645' },
   timeouts: { fleet: 35000, consumables: 10000, iron: 12000 },
-  refreshMs: 5 * 60 * 1000
+  refreshMs: 5 * 60 * 1000,
+  fleetSheetUrl: 'https://docs.google.com/spreadsheets/d/1Zc_zAnGEA-EUG-y73cCiU_tvPEYgA-tsWXVTgpV5QFs/edit'
 };
 function sheetCsv(id, gid){ return 'https://docs.google.com/spreadsheets/d/' + id + '/export?format=csv&gid=' + gid; }
 const API_URL = CONFIG.apiUrl;
@@ -1308,7 +1312,7 @@ function renderAll() {
   if (_activeSource() !== 'fleet') { _dirty.fleet = true; return; }
   // Fleet #1 removed from the dashboard
   if (Array.isArray(appData.fleets)) {
-    appData.fleets = appData.fleets.filter(f => String(f.num) !== '1');
+    appData.fleets = appData.fleets.filter(f => String(f.num) !== '1' && String(f.num) !== '10');
   }
   renderSummary();
   renderCalendar();
@@ -1729,7 +1733,12 @@ function renderFleetPanels() {
   });
 }
 
-function sideCard(side, label, cssClass) {
+function editLink(gid) {
+  if (gid === undefined || gid === null || gid === '') return '';
+  var url = CONFIG.fleetSheetUrl + '#gid=' + encodeURIComponent(gid);
+  return '<a class="sc-edit" href="' + url + '" target="_blank" rel="noopener" title="Edit this fleet tab in Google Sheets" onclick="event.stopPropagation()">&#x270F;&#xFE0F; Edit</a>';
+}
+function sideCard(side, label, cssClass, gid) {
   // Shift row: DAY SHIFT ☀️ / NIGHT SHIFT 🌙(blue)
   var shiftParts = [];
   if (side.dayShift)   shiftParts.push('DAY SHIFT &#x2600;&#xFE0F;');
@@ -1767,7 +1776,7 @@ function sideCard(side, label, cssClass) {
 
   var dateLabel = cssClass === 'rigdown' ? 'Rig Down Date' : 'Rig Up Date';
   return '<div class="section-card">'
-    + '<div class="sc-header ' + cssClass + '">' + label + '</div>'
+    + '<div class="sc-header ' + cssClass + '"><span>' + label + '</span>' + editLink(gid) + '</div>'
     + dRow('Location', side.location)
     + dRow('Pad', side.pad)
     + dtRow(dateLabel, side.date, side.time)
@@ -1872,8 +1881,8 @@ function fleetPanel(f) {
     + '</div></div>'
     + padInfoBox(f)
     + '<div class="fleet-detail-grid">'
-    + sideCard(ru, '🟢&nbsp; Rig Up',   'rigup')
-    + sideCard(rd, '🔴&nbsp; Rig Down', 'rigdown')
+    + sideCard(ru, '🟢&nbsp; Rig Up',   'rigup', f.gid)
+    + sideCard(rd, '🔴&nbsp; Rig Down', 'rigdown', f.gid)
     + '</div>'
     + filesSection(f);
 }
@@ -1893,7 +1902,8 @@ function filesSection(f) {
   return '<div class="fleet-files-grid">'
     + drawingCardHtml(f, num, 'Rig Up Drawing',   'drawing',     'dwg')
     + drawingCardHtml(f, num, 'Pumpdown Drawing', 'pumpdrawing', null)
-    + certCardHtml(f, num, 'Certification Packet', 'cert')
+    + certCardHtml(f, num, 'Rig Up Certification Packet',   'cert')
+    + certCardHtml(f, num, 'Rig Down Certification Packet', 'certDown')
     + '</div>';
 }
 
