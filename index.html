@@ -1130,11 +1130,13 @@ function parseDeployed_(rows){
   var fleets=[], types=[], counts={}, seen={}, cur=null;
   rows.forEach(function(r){
     var c0=(r[0]||'').trim();
-    if(/fleet\s*#?\s*\d/i.test(c0)){ cur={label:c0, pad:(r[1]||'').trim()}; fleets.push(cur); counts[c0]={}; return; }
+    if(/fleet\s*#?\s*\d/i.test(c0)){ cur={label:c0, pad:(r[1]||'').trim(), chart:(r[2]||'').trim()}; fleets.push(cur); counts[c0]={}; return; }
     if(!cur) return;
+    var ch=(r[2]||'').trim();
+    if(cur.chart && ch && ch!==cur.chart) return;   // skip trailing blank template charts (e.g. Chart5/Chart6) that follow the last fleet block; blank chart cells inherit the current fleet
     var type=(r[5]||'').trim();
     if(ironJunk_(type) || type.length>45) return;
-    counts[cur.label][type]=(r[6]||'').trim();
+    if(!counts[cur.label][type]) counts[cur.label][type]=(r[6]||'').trim();   // keep first real value; don't let a zero-filled repeat clobber it
     if(!seen[type]){ seen[type]=1; types.push(type); }
   });
   return { fleets:fleets, types:types, counts:counts };
