@@ -672,6 +672,37 @@
 .uinv-pdf:hover{background:var(--uinv-red);color:#fff;}
 .uinv-note{color:var(--caution);background:rgba(217,119,6,.10);border:1px solid rgba(217,119,6,.30);border-radius:8px;padding:12px 14px;font-size:13px;font-weight:600;}
 .inv-note{color:var(--caution,#b26a00);background:rgba(217,119,6,.10);border:1px solid rgba(217,119,6,.30);border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600;margin:0 0 16px;}
+
+/* ===== Rig Up/Down edit modal ===== */
+.sc-editbtn{background:none;border:none;cursor:pointer;padding:0;margin-right:12px;font:inherit;}
+.em-modal{position:fixed;inset:0;background:rgba(10,15,25,.55);z-index:1000;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto;}
+.em-modal.open{display:flex;}
+.em-box{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.35);width:100%;max-width:720px;max-height:88vh;display:flex;flex-direction:column;}
+.em-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);font-weight:800;font-size:16px;}
+.em-x{background:none;border:none;font-size:24px;line-height:1;color:var(--text-secondary);cursor:pointer;padding:0 4px;}
+.em-x:hover{color:var(--text);}
+.em-body{padding:8px 20px 16px;overflow:auto;}
+.em-foot{display:flex;align-items:center;gap:10px;padding:14px 20px;border-top:1px solid var(--border);flex-wrap:wrap;}
+.em-note{color:var(--text-secondary);font-size:12px;}
+.em-btn{border-radius:8px;padding:9px 18px;font-weight:700;font-size:13px;cursor:pointer;border:1px solid var(--border);}
+.em-btn.ghost{background:transparent;color:var(--text-secondary);}
+.em-btn.ghost:hover{color:var(--text);}
+.em-btn.primary{background:var(--primary,#1565C0);color:#fff;border-color:transparent;}
+.em-btn.primary:hover{filter:brightness(1.06);}
+.em-btn:disabled{opacity:.6;cursor:default;}
+.ed-sec{font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);margin:16px 0 8px;border-bottom:1px solid var(--border);padding-bottom:4px;}
+.ed-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 16px;}
+.ed-fld{display:flex;flex-direction:column;gap:4px;}
+.ed-lbl{font-size:11px;font-weight:600;color:var(--text-secondary);}
+.em-box input[type=text],.em-box input[type=date],.em-box input[type=time],.em-box input[type=number]{background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:7px;padding:7px 9px;font:inherit;font-size:13px;width:100%;box-sizing:border-box;}
+.ed-ckrow{display:flex;flex-wrap:wrap;gap:8px 18px;padding:4px 0 2px;}
+.ed-ck{display:inline-flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;}
+.ed-ck input{width:16px;height:16px;}
+.ed-ckn{flex-direction:row;align-items:center;gap:10px;justify-content:space-between;border:1px solid var(--border);border-radius:8px;padding:7px 10px;}
+.ed-ckn .ed-qty{max-width:74px;}
+.em-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:#1f2937;color:#fff;padding:11px 18px;border-radius:9px;font-weight:600;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:1200;}
+.em-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.em-toast.err{background:var(--alert,#C62828);}
 </style>
 </head>
 <body>
@@ -1236,8 +1267,103 @@ function renderPending(){
       + '</div>';
   }).join('');
   el.innerHTML = head
-    + '<div class="uinv-cap">Live from the RES-EVO Billing Platform · Operations Summary → Needs Attention → Unsigned. Open PDF deep-links to the invoice when a link is on file, otherwise opens the Drive folder.</div>'
+    + '<div class="uinv-cap">Live from the RES-EVO Billing Platform</div>'
     + sections;
+}
+// ===== Edit Rig Up / Rig Down on the dashboard -> Google Sheet (2026-08-23) =====
+var _editCtx=null;
+function editBtn_(num, cssClass){
+  if(num===undefined||num===null||num==='') return '';
+  var side = cssClass==='rigdown' ? 'rigDown' : 'rigUp';
+  return '<button class="sc-edit sc-editbtn" onclick="event.stopPropagation();openEditModal(\''+esc(String(num))+'\',\''+side+'\')" title="Edit on the dashboard">&#x270F;&#xFE0F; Edit</button>';
+}
+function to24h_(t){ t=String(t==null?'':t).trim(); if(!t) return ''; var p=t.split(':'); if(p.length<2) return ''; var h=parseInt(p[0],10); if(isNaN(h)) return ''; var mi=parseInt(p[1],10)||0; var up=t.toUpperCase(); if(up.indexOf('PM')>-1&&h<12)h+=12; if(up.indexOf('AM')>-1&&h===12)h=0; return (h<10?'0'+h:''+h)+':'+(mi<10?'0'+mi:''+mi); }
+function to12h_(t){ t=String(t==null?'':t).trim(); if(!t) return ''; var p=t.split(':'); if(p.length<2) return t; var h=parseInt(p[0],10); if(isNaN(h)) return t; var mi=parseInt(p[1],10)||0; var ap=h>=12?'PM':'AM'; var h12=h%12; if(h12===0)h12=12; return h12+':'+(mi<10?'0'+mi:''+mi)+' '+ap; }
+function emToast_(msg,isErr){ var t=document.getElementById('emToast'); if(!t){ t=document.createElement('div'); t.id='emToast'; document.body.appendChild(t); } t.textContent=msg; t.className='em-toast show'+(isErr?' err':''); clearTimeout(window.__emTs); window.__emTs=setTimeout(function(){ t.className='em-toast'; },3600); }
+function _fleetByNum_(num){ return ((appData&&appData.fleets)||[]).filter(function(x){return String(x.num)===String(num);})[0]; }
+function openEditModal(num, side){
+  var f=_fleetByNum_(num);
+  if(!f){ emToast_('Fleet data still loading — try again in a moment.',true); return; }
+  _editCtx={num:String(num), side:side};
+  document.getElementById('ed_title').textContent=(side==='rigDown'?'Rig Down':'Rig Up')+'  ·  Fleet #'+num+(f.name?('  —  '+f.name):'');
+  document.getElementById('ed_body').innerHTML=editFormHtml_(f, side);
+  var sb=document.getElementById('ed_saveBtn'); if(sb){ sb.disabled=false; sb.textContent='Save changes'; }
+  document.getElementById('editModal').classList.add('open');
+}
+function closeEditModal(){ var m=document.getElementById('editModal'); if(m) m.classList.remove('open'); _editCtx=null; }
+function editFormHtml_(f, side){
+  var o=(side==='rigDown'?f.rigDown:f.rigUp)||{}; var ro=o.roustabout||{}, mc=o.misc||{};
+  function e2(v){ return esc(v==null?'':String(v)); }
+  function fld(l,inp){ return '<div class="ed-fld"><label class="ed-lbl">'+l+'</label>'+inp+'</div>'; }
+  function txt(id,l,v){ return fld(l,'<input type="text" id="'+id+'" value="'+e2(v)+'">'); }
+  function dat(id,l,v){ return fld(l,'<input type="date" id="'+id+'" value="'+e2(v)+'">'); }
+  function tim(id,l,v){ return fld(l,'<input type="time" id="'+id+'" value="'+e2(to24h_(v))+'">'); }
+  function ck(id,l,on){ return '<label class="ed-ck"><input type="checkbox" id="'+id+'"'+(on?' checked':'')+'><span>'+l+'</span></label>'; }
+  function ckn(id,l,on,qid,qv){ return '<div class="ed-fld ed-ckn">'+ck(id,l,on)+'<input type="number" min="0" id="'+qid+'" value="'+e2(qv||0)+'" class="ed-qty" title="quantity"></div>'; }
+  function sec(t){ return '<div class="ed-sec">'+t+'</div>'; }
+  return ''
+    + sec('Schedule')
+    + '<div class="ed-grid">'+ txt('ed_location','Location',o.location)+ txt('ed_pad','Pad',o.pad)
+      + dat('ed_date','Date',o.date)+ tim('ed_time','Time',o.time)
+      + dat('ed_logisticsDate','Logistics Date',o.logisticsDate)+ tim('ed_logisticsTime','Logistics Time',o.logisticsTime)+'</div>'
+    + '<div class="ed-ckrow">'+ ck('ed_dayShift','Day Shift',o.dayShift)+ ck('ed_nightShift','Night Shift',o.nightShift)+ ck('ed_hotel','Hotel',o.hotel)+'</div>'
+    + sec('Services')
+    + '<div class="ed-ckrow">'
+      + ck('ed_monolineIron','Monoline Iron',o.monolineIron)+ ck('ed_pumpdownIron','Pumpdown Iron',o.pumpdownIron)
+      + ck('ed_lowPressureIron','Low Pressure Iron',o.lowPressureIron)+ ck('ed_flowbackIron','Flowback Iron',o.flowbackIron)
+      + ck('ed_highPressureHoses','High Pressure Hoses',o.highPressureHoses)+ ck('ed_rigMats','Rig Mats / Barrier Wall',o.rigMats)
+      + ck('ed_pullCables','Pull Cables',o.pullCables)+'</div>'
+    + sec('Transports')
+    + '<div class="ed-grid">'
+      + ckn('ed_loadTransports','Load Transports',o.loadTransports,'ed_loadQty',o.loadQty)
+      + ckn('ed_unloadTransports','Unload Transports',o.unloadTransports,'ed_unloadQty',o.unloadQty)
+      + ckn('ed_semiHotshot','Semi / Hotshot',o.semiHotshot,'ed_semiQty',o.semiQty)+'</div>'
+    + sec('Roustabout Crew')
+    + '<div class="ed-grid">'+ dat('ed_ro_start','Start Date',ro.start)+ tim('ed_ro_startTime','Start Time',ro.startTime)+ dat('ed_ro_end','End Date',ro.end)+'</div>'
+    + '<div class="ed-grid">'+ ckn('ed_ro_dayShift','Day Shift',ro.dayShift,'ed_ro_dayQty',ro.dayQty)+ ckn('ed_ro_nightShift','Night Shift',ro.nightShift,'ed_ro_nightQty',ro.nightQty)+'</div>'
+    + sec('Add-On / Misc')
+    + '<div class="ed-grid">'+ dat('ed_mc_start','Misc Start',mc.start)+ tim('ed_mc_startTime','Start Time',mc.startTime)+ dat('ed_mc_end','Misc End',mc.end)+'</div>'
+    + txt('ed_mc_desc','Misc Description',mc.desc);
+}
+function _mergeEdit_(t,d){
+  t.location=d.location; t.pad=d.pad; t.date=d.date; t.time=to12h_(d.time);
+  t.logisticsDate=d.logisticsDate; t.logisticsTime=to12h_(d.logisticsTime);
+  t.dayShift=d.dayShift; t.nightShift=d.nightShift; t.hotel=d.hotel;
+  ['monolineIron','pumpdownIron','lowPressureIron','flowbackIron','highPressureHoses','rigMats','pullCables','loadTransports','unloadTransports','semiHotshot'].forEach(function(k){ t[k]=d[k]; });
+  t.loadQty=d.loadQty; t.unloadQty=d.unloadQty; t.semiQty=d.semiQty;
+  t.roustabout={ start:d.roustabout.start, startTime:to12h_(d.roustabout.startTime), end:d.roustabout.end, dayShift:d.roustabout.dayShift, dayQty:d.roustabout.dayQty, nightShift:d.roustabout.nightShift, nightQty:d.roustabout.nightQty };
+  t.misc={ start:d.misc.start, startTime:to12h_(d.misc.startTime), end:d.misc.end, desc:d.misc.desc };
+}
+function saveEditModal(){
+  if(!_editCtx) return;
+  var num=_editCtx.num, side=_editCtx.side;
+  function v(id){ var e=document.getElementById(id); return e?e.value:''; }
+  function c(id){ var e=document.getElementById(id); return e?!!e.checked:false; }
+  function n(id){ var e=document.getElementById(id); return e?(Number(e.value)||0):0; }
+  var data={ location:v('ed_location'), pad:v('ed_pad'), date:v('ed_date'), time:v('ed_time'),
+    logisticsDate:v('ed_logisticsDate'), logisticsTime:v('ed_logisticsTime'),
+    dayShift:c('ed_dayShift'), nightShift:c('ed_nightShift'), hotel:c('ed_hotel'),
+    monolineIron:c('ed_monolineIron'), pumpdownIron:c('ed_pumpdownIron'), lowPressureIron:c('ed_lowPressureIron'),
+    flowbackIron:c('ed_flowbackIron'), highPressureHoses:c('ed_highPressureHoses'), rigMats:c('ed_rigMats'), pullCables:c('ed_pullCables'),
+    loadTransports:c('ed_loadTransports'), loadQty:n('ed_loadQty'), unloadTransports:c('ed_unloadTransports'), unloadQty:n('ed_unloadQty'),
+    semiHotshot:c('ed_semiHotshot'), semiQty:n('ed_semiQty'),
+    roustabout:{ start:v('ed_ro_start'), startTime:v('ed_ro_startTime'), end:v('ed_ro_end'), dayShift:c('ed_ro_dayShift'), dayQty:n('ed_ro_dayQty'), nightShift:c('ed_ro_nightShift'), nightQty:n('ed_ro_nightQty') },
+    misc:{ start:v('ed_mc_start'), startTime:v('ed_mc_startTime'), end:v('ed_mc_end'), desc:v('ed_mc_desc') } };
+  var btn=document.getElementById('ed_saveBtn'); if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
+  fetch(CONFIG.apiUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'saveFleetPanel',fleet:num,side:side,data:data})})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(res&&res.ok){
+        var f=_fleetByNum_(num);
+        if(f){ var tgt=side==='rigDown'?(f.rigDown=f.rigDown||{}):(f.rigUp=f.rigUp||{}); _mergeEdit_(tgt,data); try{ renderFleetPanels(); }catch(e){} }
+        closeEditModal(); emToast_('Saved to the sheet ✓');
+        try{ loadFleets(); }catch(e){}
+      } else {
+        if(btn){ btn.disabled=false; btn.textContent='Save changes'; }
+        emToast_('Save failed: '+((res&&res.error)||'unknown'),true);
+      }
+    })
+    .catch(function(err){ if(btn){ btn.disabled=false; btn.textContent='Save changes'; } emToast_('Save failed — could not reach the sheet.',true); });
 }
 function loadIron(){
   if(!document.getElementById('panel-iron')) return;
@@ -1864,9 +1990,9 @@ function renderFleetPanels() {
 function editLink(gid) {
   if (gid === undefined || gid === null || gid === '') return '';
   var url = CONFIG.fleetSheetUrl + '#gid=' + encodeURIComponent(gid);
-  return '<a class="sc-edit" href="' + url + '" target="_blank" rel="noopener" title="Edit this fleet tab in Google Sheets" onclick="event.stopPropagation()">&#x270F;&#xFE0F; Edit</a>';
+  return '<a class="sc-edit" href="' + url + '" target="_blank" rel="noopener" title="Edit this fleet tab in Google Sheets" onclick="event.stopPropagation()">Sheet &#x2197;</a>';
 }
-function sideCard(side, label, cssClass, gid) {
+function sideCard(side, label, cssClass, gid, num) {
   // Shift row: DAY SHIFT ☀️ / NIGHT SHIFT 🌙(blue)
   var shiftParts = [];
   if (side.dayShift)   shiftParts.push('DAY SHIFT &#x2600;&#xFE0F;');
@@ -1904,7 +2030,7 @@ function sideCard(side, label, cssClass, gid) {
 
   var dateLabel = cssClass === 'rigdown' ? 'Rig Down Date' : 'Rig Up Date';
   return '<div class="section-card">'
-    + '<div class="sc-header ' + cssClass + '"><span>' + label + '</span>' + editLink(gid) + '</div>'
+    + '<div class="sc-header ' + cssClass + '"><span>' + label + '</span>' + editBtn_(num, cssClass) + editLink(gid) + '</div>'
     + dRow('Location', side.location)
     + dRow('Pad', side.pad)
     + dtRow(dateLabel, side.date, side.time)
@@ -2010,11 +2136,11 @@ function fleetPanel(f) {
     + padInfoBox(f)
     + '<div class="fleet-detail-grid">'
     + '<div class="ff-col">'
-    +   sideCard(ru, '🟢&nbsp; Rig Up',   'rigup', f.gid)
+    +   sideCard(ru, '🟢&nbsp; Rig Up',   'rigup', f.gid, f.num)
     +   certCardHtml(f, f.num, 'Rig Up Certification Packet',   'cert')
     + '</div>'
     + '<div class="ff-col">'
-    +   sideCard(rd, '🔴&nbsp; Rig Down', 'rigdown', f.gid)
+    +   sideCard(rd, '🔴&nbsp; Rig Down', 'rigdown', f.gid, f.num)
     +   certCardHtml(f, f.num, 'Rig Down Certification Packet', 'certDown')
     + '</div>'
     + '</div>'
@@ -2142,5 +2268,12 @@ function applyTheme(t) {
   localStorage.setItem('evo-theme', t);
 }
 </script>
+<div class="em-modal" id="editModal" onclick="if(event.target===this)closeEditModal()">
+  <div class="em-box" role="dialog" aria-modal="true">
+    <div class="em-head"><span id="ed_title">Edit</span><button class="em-x" onclick="closeEditModal()" aria-label="Close">&times;</button></div>
+    <div class="em-body" id="ed_body"></div>
+    <div class="em-foot"><span class="em-note">Saves directly to the RES · EVO Fleet Tracker sheet</span><span style="flex:1"></span><button class="em-btn ghost" onclick="closeEditModal()">Cancel</button><button class="em-btn primary" id="ed_saveBtn" onclick="saveEditModal()">Save changes</button></div>
+  </div>
+</div>
 </body>
 </html>
