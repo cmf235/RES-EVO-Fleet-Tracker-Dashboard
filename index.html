@@ -37,7 +37,7 @@
       --misc-bg: #FFF3E0;
       --cal-line: #a8b0bd;
       --inv-green: #1a7f37;
-      --good: #1a7f37; --alert: #C62828; --caution: #B26A00; --ctx: #6b7280; --heat-rgb: 21,101,192;
+      --good: #1a7f37; --alert: #C62828; --caution: #B26A00; --ctx: #6b7280; --heat-rgb: 21,101,192; --uinv-red:#D9534F; --uinv-tint:rgba(217,83,79,.12); --uinv-border:rgba(217,83,79,.42);
     }
     [data-theme="dark"] {
       --bg: #0f1117;
@@ -59,7 +59,7 @@
       --misc-bg: #2a1a00;
       --cal-line: #5d6478;
       --inv-green: #3fb950;
-      --good: #3fb950; --alert: #f47174; --caution: #e3a008; --ctx: #8892a4; --heat-rgb: 96,165,250;
+      --good: #3fb950; --alert: #f47174; --caution: #e3a008; --ctx: #8892a4; --heat-rgb: 96,165,250; --uinv-red:#f2807f; --uinv-tint:rgba(242,128,127,.16); --uinv-border:rgba(242,128,127,.42);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -647,22 +647,30 @@
     }
     .nav-tab[aria-current="page"] { font-weight: 700; }
   
-/* ===== Unsigned-invoice banners ===== */
-.inv-banner{background:rgba(198,40,40,.08);border:1px solid rgba(198,40,40,.35);border-left:4px solid var(--alert,#C62828);border-radius:10px;padding:12px 14px;margin:0 0 16px;}
-.inv-banner-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap;}
-.inv-banner-title{font-weight:800;color:var(--alert,#C62828);font-size:14px;letter-spacing:.01em;}
-.inv-banner-count{font-weight:700;color:var(--alert,#C62828);font-size:12px;background:rgba(198,40,40,.12);padding:2px 9px;border-radius:999px;white-space:nowrap;}
-.inv-row{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;padding:7px 0;border-top:1px solid rgba(198,40,40,.18);flex-wrap:wrap;}
-.inv-row:first-of-type{border-top:none;}
-.inv-main{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;min-width:0;}
-.inv-num{font-weight:800;color:var(--text,#1a2230);}
-.inv-amt{font-weight:800;color:var(--alert,#C62828);}
-.inv-meta{color:var(--text-secondary,#5f6b7a);font-size:12.5px;}
-.inv-fleet-tag{font-weight:800;font-size:11px;color:#fff;background:var(--alert,#C62828);padding:1px 7px;border-radius:6px;}
-.inv-side{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
-.inv-when{color:var(--text-secondary,#5f6b7a);font-size:12px;white-space:nowrap;}
-.inv-pdf{font-weight:700;font-size:12.5px;color:var(--alert,#C62828);text-decoration:none;border:1px solid rgba(198,40,40,.45);padding:3px 11px;border-radius:7px;white-space:nowrap;transition:background .12s,color .12s;}
-.inv-pdf:hover{background:var(--alert,#C62828);color:#fff;}
+/* ===== Pending Invoices tab ===== */
+.uinv-page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin:0 0 6px;}
+.uinv-page-title{font-size:22px;font-weight:800;color:var(--text);}
+.uinv-page-sub{color:var(--text-secondary);font-size:13px;margin-top:2px;}
+.uinv-page-kpi{text-align:right;white-space:nowrap;}
+.uinv-page-num{font-size:26px;font-weight:800;color:var(--uinv-red);}
+.uinv-page-lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);}
+.uinv-cap{color:var(--text-secondary);font-size:12px;margin:0 0 16px;max-width:820px;}
+.uinv-empty{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;text-align:center;color:var(--text-secondary);font-weight:600;}
+.uinv-group{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--uinv-red);border-radius:12px;padding:12px 16px;margin:0 0 14px;box-shadow:var(--shadow);}
+.uinv-group-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:2px;flex-wrap:wrap;}
+.uinv-group-title{font-weight:800;font-size:15px;color:var(--text);}
+.uinv-group-count{font-weight:700;font-size:12px;color:var(--uinv-red);background:var(--uinv-tint);padding:2px 10px;border-radius:999px;white-space:nowrap;}
+.uinv-row{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;padding:9px 0;border-top:1px solid var(--border);flex-wrap:wrap;}
+.uinv-row:first-of-type{border-top:none;}
+.uinv-main{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;min-width:0;}
+.uinv-num{font-weight:800;color:var(--text);}
+.uinv-amt{font-weight:800;color:var(--uinv-red);}
+.uinv-meta{color:var(--text-secondary);font-size:12.5px;}
+.uinv-side{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.uinv-when{color:var(--text-secondary);font-size:12px;white-space:nowrap;}
+.uinv-pdf{font-weight:700;font-size:12.5px;color:var(--uinv-red);text-decoration:none;border:1px solid var(--uinv-border);padding:4px 12px;border-radius:7px;white-space:nowrap;transition:background .12s,color .12s;}
+.uinv-pdf:hover{background:var(--uinv-red);color:#fff;}
+.uinv-note{color:var(--caution);background:rgba(217,119,6,.10);border:1px solid rgba(217,119,6,.30);border-radius:8px;padding:12px 14px;font-size:13px;font-weight:600;}
 .inv-note{color:var(--caution,#b26a00);background:rgba(217,119,6,.10);border:1px solid rgba(217,119,6,.30);border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600;margin:0 0 16px;}
 </style>
 </head>
@@ -695,6 +703,7 @@
   <div class="nav-tab"        data-panel="fleet-9"  onclick="showPanel('fleet-9')"><span class="nav-dot" style="background:#6A1B9A"></span>Fleet #9</div>
   <div class="nav-tab"        data-panel="fleet-13" onclick="showPanel('fleet-13')"><span class="nav-dot" style="background:#00695C"></span>Fleet #13</div>
   <div class="nav-tab"        data-panel="fleet-15" onclick="showPanel('fleet-15')"><span class="nav-dot" style="background:#AD1457"></span>Fleet #15</div>
+  <div class="nav-tab"        data-panel="pending" onclick="showPanel('pending')">📄 Pending Invoices</div>
   <div class="nav-tab"        data-panel="consumables" onclick="showPanel('consumables')">📦 Consumables Inventory</div>
   <div class="nav-tab"        data-panel="iron" onclick="showPanel('iron')">🔧 Iron Inventory Tracker</div>
 </nav>
@@ -706,7 +715,6 @@
   <!-- SUMMARY -->
   <div class="panel active" id="panel-summary">
     <div class="conflict-banner" id="conflictBanner"></div>
-    <div id="unsignedCatchAll"></div>
     <div class="stats-row" id="statsRow">
       <div class="kpi-card good"><div class="kpi-val">—</div><div class="kpi-lbl">Active Now</div></div>
       <div class="kpi-card caution"><div class="kpi-val">—</div><div class="kpi-lbl">Within 7 Days</div></div>
@@ -765,6 +773,7 @@
   <div class="panel" id="panel-fleet-9"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
   <div class="panel" id="panel-fleet-13"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
   <div class="panel" id="panel-fleet-15"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading…</p></div></div>
+  <div class="panel" id="panel-pending"><div class="no-data"><div class="no-data-icon">📄</div><p>Loading pending invoices…</p></div></div>
   <div class="panel" id="panel-consumables"><div class="no-data"><div class="no-data-icon">⏳</div><p>Loading inventory…</p></div></div>
   <div class="panel" id="panel-iron"><div class="no-data"><div class="no-data-icon">🔧</div><p>Loading iron inventory…</p></div></div>
 </main>
@@ -1168,9 +1177,7 @@ function loadBilling(){
     .catch(function(err){ billingErr=(err&&err.message)||'error'; applyBilling_(); });
 }
 function applyBilling_(){
-  if(!appData) return;                 // fleet render will include banners when it runs
-  try{ if(document.getElementById('panel-summary')) renderSummary(); }catch(e){}
-  try{ if(typeof renderFleetPanels==='function') renderFleetPanels(); }catch(e){}
+  try{ renderPending(); }catch(e){}
 }
 function invoicesForFleet_(num){
   if(!billingUnsigned) return [];
@@ -1181,39 +1188,56 @@ function invMoney0_(n){ return '$'+(Number(n)||0).toLocaleString('en-US',{maximu
 function invAge_(dateStr){ var d=parseDate(dateStr); if(!d) return null; var t=new Date(); t.setHours(0,0,0,0); var days=Math.round((t-d)/86400000); return days<0?null:days; }
 function invoicePdfHref_(x){ return (x.pdfUrl && /^https?:\/\//i.test(x.pdfUrl)) ? x.pdfUrl : (CONFIG.invoicePdfFolder||'#'); }
 function invoicePdfLabel_(x){ return (x.pdfUrl && /^https?:\/\//i.test(x.pdfUrl)) ? 'Open PDF ↗' : 'Open PDF folder ↗'; }
-function invFleetTag_(fleet){ var f=String(fleet||'').trim(); if(!f) return '—'; return /^\d+$/.test(f)?('Fleet #'+f):f; }
-function renderInvoiceBanner_(list, title, showFleet){
-  if(!list || !list.length) return '';
-  var rows=list.map(function(x){
-    var age=invAge_(x.date);
-    var meta=[x.operator, x.location, x.disc].map(function(s){return String(s||'').trim();}).filter(Boolean).join(' · ');
-    var when=(fmt(x.date)||x.date||'')+(age!=null?(' · '+age+'d'):'');
-    return '<div class="inv-row">'
-      + '<div class="inv-main">'
-      +   (showFleet?'<span class="inv-fleet-tag">'+esc(invFleetTag_(x.fleet))+'</span>':'')
-      +   (x.inv?('<span class="inv-num">#'+esc(x.inv)+'</span> '):'')+'<span class="inv-amt">'+invMoney0_(x.amount)+'</span>'
-      +   (meta?' <span class="inv-meta">'+esc(meta)+'</span>':'')
-      + '</div>'
-      + '<div class="inv-side"><span class="inv-when">'+esc(when)+'</span>'
-      +   '<a class="inv-pdf" href="'+esc(invoicePdfHref_(x))+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'+invoicePdfLabel_(x)+'</a>'
-      + '</div></div>';
+function invFleetTag_(fleet){ var f=String(fleet||'').trim(); if(!f) return 'Unassigned'; return /^\d+$/.test(f)?('Fleet #'+f):f; }
+function uinvRow_(x){
+  var age=invAge_(x.date);
+  var meta=[x.operator, x.location, x.disc].map(function(s){return String(s||'').trim();}).filter(Boolean).join(' · ');
+  var when=(fmt(x.date)||x.date||'')+(age!=null?(' · '+age+'d'):'');
+  return '<div class="uinv-row">'
+    + '<div class="uinv-main">'
+    +   (x.inv?('<span class="uinv-num">#'+esc(x.inv)+'</span> '):'')+'<span class="uinv-amt">'+invMoney0_(x.amount)+'</span>'
+    +   (meta?' <span class="uinv-meta">'+esc(meta)+'</span>':'')
+    + '</div>'
+    + '<div class="uinv-side"><span class="uinv-when">'+esc(when)+'</span>'
+    +   '<a class="uinv-pdf" href="'+esc(invoicePdfHref_(x))+'" target="_blank" rel="noopener">'+invoicePdfLabel_(x)+'</a>'
+    + '</div></div>';
+}
+function renderPending(){
+  var el=document.getElementById('panel-pending'); if(!el) return;
+  if(billingUnsigned===null){
+    el.innerHTML = billingErr
+      ? '<div class="uinv-note">⚠️ Couldn’t reach the billing data ('+esc(billingErr)+'). It refreshes with the dashboard — try Refresh.</div>'
+      : '<div class="no-data"><div class="no-data-icon">⏳</div><p>Loading pending invoices…</p></div>';
+    return;
+  }
+  var list=billingUnsigned.slice();
+  var grand=list.reduce(function(a,x){return a+(Number(x.amount)||0);},0);
+  var head='<div class="uinv-page-head"><div><div class="uinv-page-title">✍️ Pending Invoices</div>'
+    + '<div class="uinv-page-sub">Unsigned invoices — unpaid &amp; not yet signed — from the Billing Platform, current year</div></div>'
+    + '<div class="uinv-page-kpi"><span class="uinv-page-num">'+list.length+'</span><span class="uinv-page-lbl">unsigned · '+invMoney0_(grand)+'</span></div></div>';
+  if(!list.length){
+    el.innerHTML = head + '<div class="uinv-empty">🎉 No unsigned invoices this year — all caught up.</div>';
+    return;
+  }
+  var groups={};
+  list.forEach(function(x){ var f=String(x.fleet||'').trim()||'Unassigned'; (groups[f]=groups[f]||[]).push(x); });
+  var keys=Object.keys(groups).sort(function(a,b){
+    var na=/^\d+$/.test(a), nb=/^\d+$/.test(b);
+    if(na&&nb) return (+a)-(+b);
+    if(na) return -1; if(nb) return 1; return a<b?-1:1;
+  });
+  var sections=keys.map(function(f){
+    var rows=groups[f];
+    var sub=rows.reduce(function(a,x){return a+(Number(x.amount)||0);},0);
+    return '<div class="uinv-group">'
+      + '<div class="uinv-group-head"><span class="uinv-group-title">'+esc(invFleetTag_(f))+'</span>'
+      +   '<span class="uinv-group-count">'+rows.length+' · '+invMoney0_(sub)+'</span></div>'
+      + rows.map(uinvRow_).join('')
+      + '</div>';
   }).join('');
-  var total=list.reduce(function(a,x){return a+(Number(x.amount)||0);},0);
-  return '<div class="inv-banner">'
-    + '<div class="inv-banner-head"><span class="inv-banner-title">✍️ '+esc(title)+'</span>'
-    + '<span class="inv-banner-count">'+list.length+' · '+invMoney0_(total)+'</span></div>'
-    + rows + '</div>';
-}
-function invoiceBanner(num){
-  var list=invoicesForFleet_(num);
-  return renderInvoiceBanner_(list, 'Unsigned Invoice'+(list.length>1?'s':'')+' · Needs Signature', false);
-}
-function renderUnsignedCatchAll_(){
-  var el=document.getElementById('unsignedCatchAll'); if(!el) return;
-  if(billingUnsigned===null){ el.innerHTML = billingErr ? '<div class="inv-note">⚠️ Couldn’t reach billing data ('+esc(billingErr)+').</div>' : ''; return; }
-  var visible=(appData&&appData.fleets)?appData.fleets.map(function(f){return String(f.num);}):[];
-  var orphans=billingUnsigned.filter(function(x){ return visible.indexOf(String(x.fleet))===-1; });
-  el.innerHTML = renderInvoiceBanner_(orphans, 'Unsigned Invoices · No Fleet Tab', true);
+  el.innerHTML = head
+    + '<div class="uinv-cap">Live from the RES-EVO Billing Platform · Operations Summary → Needs Attention → Unsigned. Open PDF deep-links to the invoice when a link is on file, otherwise opens the Drive folder.</div>'
+    + sections;
 }
 function loadIron(){
   if(!document.getElementById('panel-iron')) return;
@@ -1562,8 +1586,6 @@ function renderSummary() {
   document.getElementById('summaryCards').innerHTML =
     appData.fleets.map(f => summaryCard(f)).join('') ||
     '<div class="no-data" style="grid-column:1/-1"><div class="no-data-icon">📭</div><p>No fleet data.</p></div>';
-
-  renderUnsignedCatchAll_();
 }
 
 function detectConflicts(allEv) {
@@ -1979,8 +2001,7 @@ function padInfoBox(f) {
 function fleetPanel(f) {
   var color = FLEET_COLORS[f.num] || '#1565C0';
   var rd = f.rigDown, ru = f.rigUp;
-  return invoiceBanner(f.num)
-    + '<div class="fleet-page-header">'
+  return '<div class="fleet-page-header">'
     + '<div class="fleet-badge-lg" style="background:' + color + '">' + f.num + '</div>'
     + '<div style="flex:1"><div class="fleet-page-title">' + esc(f.name) + '</div>'
     + '<div class="fleet-page-sub">Detailed schedule · Click any card to return to summary</div>'
@@ -2105,6 +2126,7 @@ function showPanel(id) {
   if (_src === 'fleet' && _dirty.fleet) { _dirty.fleet = false; renderAll(); }
   else if (_src === 'consumables' && _dirty.consumables) { _dirty.consumables = false; renderConsumables(); }
   else if (_src === 'iron' && _dirty.iron) { _dirty.iron = false; renderIron(); }
+  if (id === 'pending') renderPending();
 }
 
 // ============================================================
