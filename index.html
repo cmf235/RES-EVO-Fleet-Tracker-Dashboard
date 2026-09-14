@@ -872,9 +872,9 @@ var _dirty = { fleet:false, consumables:false, iron:false };
   const theme = localStorage.getItem('evo-theme') || 'light';
   applyTheme(theme);
 
-  // Restore last panel
+  // Restore last panel (a #hash deep link wins over the saved tab)
   const panel = localStorage.getItem('evo-panel') || 'summary';
-  showPanel(panel);
+  showPanel(panelFromHash() || panel);
 
   refreshData();
   startAutoRefresh();
@@ -2238,6 +2238,16 @@ function dRangeRow(label, rangeObj) {
 // ============================================================
 //  PANEL / TAB SWITCHING
 // ============================================================
+// --- Deep links: allow #fleet-13, #summary, #iron, etc. to open a tab directly.
+function panelFromHash() {
+  var h = (location.hash || '').replace(/^#/, '').trim();
+  return (h && document.getElementById('panel-' + h)) ? h : '';
+}
+window.addEventListener('hashchange', function () {
+  var p = panelFromHash();
+  if (p) showPanel(p);
+});
+
 function showPanel(id) {
   if (!document.getElementById('panel-'+id)) id = 'summary';
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -2247,6 +2257,7 @@ function showPanel(id) {
   const tab = document.querySelector('[data-panel="'+id+'"]');
   if (tab) { tab.classList.add('active'); tab.setAttribute('aria-current','page'); tab.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); }
   localStorage.setItem('evo-panel', id);
+  if ((location.hash || '').slice(1) !== id) { try { history.replaceState(null, '', '#' + id); } catch(e){} }
   // H-3: a data refresh that arrived while this source was off-screen was deferred; render it now.
   var _src = _activeSource();
   if (_src === 'fleet' && _dirty.fleet) { _dirty.fleet = false; renderAll(); }
