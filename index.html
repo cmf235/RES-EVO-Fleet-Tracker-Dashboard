@@ -486,6 +486,7 @@
     .rank-fill { height: 100%; border-radius: 5px 0 0 5px; min-width: 2px; }
     .rank-val { font-size: 13px; font-weight: 800; text-align: right; }
     .rank-val span { color: var(--text-secondary); font-weight: 600; font-size: 12px; }
+    .iron-cat-card .rank-row { grid-template-columns: 128px 1fr 150px; }
     @media (max-width: 560px) { .rank-row { grid-template-columns: 100px 1fr 78px; gap: 8px; } }
 
     /* ===== SCHEDULE-TAB SKILL PASS (summary/calendar/fleet) ===== */
@@ -861,10 +862,20 @@ function ironCatOf(t){
   if(!_ironCatIdx){ _ironCatIdx={}; IRON_CATS.forEach(function(c,i){ c.items.forEach(function(it){ _ironCatIdx[ironKey(it)]=i; }); }); }
   var i=_ironCatIdx[ironKey(t)]; return i==null ? { name:'Other', color:'#9aa0a6', order:99 } : { name:IRON_CATS[i].name, color:IRON_CATS[i].color, order:i };
 }
-// Split rows (already in sheet order) into category sections, keeping the sheet's order.
+// Canonical position of an item (category order, then item order) – same order as the Deployed tab.
+function ironOrder(t){
+  var k=ironKey(t);
+  for(var i=0;i<IRON_CATS.length;i++){ var j=IRON_CATS[i].items.map(ironKey).indexOf(k); if(j>=0) return i*100+j; }
+  return 99999;
+}
+function ironSort(rows, typeOf){
+  return rows.map(function(r,i){ return { r:r, i:i, o:ironOrder(typeOf(r)) }; })
+    .sort(function(a,b){ return (a.o-b.o)||(a.i-b.i); }).map(function(x){ return x.r; });
+}
+// Split rows into category sections, always in the Deployed-tab order.
 function ironGroups(rows, typeOf){
   var out=[], cur=null;
-  rows.forEach(function(r){
+  ironSort(rows, typeOf).forEach(function(r){
     var c=ironCatOf(typeOf(r));
     if(!cur || cur.name!==c.name){ cur={ name:c.name, color:c.color, rows:[] }; out.push(cur); }
     cur.rows.push(r);
@@ -1569,7 +1580,7 @@ function renderIronProcessing(){
     }).join('');
   }).join('');
   return stateLegend(['Complete','Paint','Rebuild','Machine','Not Started'])+'<div class="inv-table-wrap"><table class="inv-table"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>'
-    +'<div class="iron-foot-note">&#8627; H4, H3 and Big Bore roll up into Complete POD Assembly; their stage progress is tracked on the POD row.</div>';
+    +'<div class="iron-foot-note">&#8627; H4, H3 and Big Bore roll up into Complete POD Assembly, so they are shown but not added again in the category totals.</div>';
 }
 
 function renderIronAvailable(){
@@ -1584,6 +1595,27 @@ function renderIronAvailable(){
     }).join('');
   }).join('');
   return '<div class="inv-table-wrap"><table class="inv-table"><thead><tr><th>Equipment</th><th class="ic">Available</th><th>&nbsp;</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+}
+
+// Overview: one colour-grouped bar per equipment category (Deployed / In the shop / Available)
+function ironCategoryCard(){
+  var dep=ironData.deployed||{fleets:[],types:[],counts:{}}, rb=ironData.rebuild||[], av=ironData.available||[];
+  var cats=IRON_CATS.map(function(c){ return { name:c.name, color:c.color, dep:0, shop:0, avail:0 }; });
+  function idx(t){ var o=ironOrder(t); return o>=99999?-1:Math.floor(o/100); }
+  (dep.types||[]).forEach(function(t){ var i=idx(t); if(i<0||ironIsHead(t)) return; (dep.fleets||[]).forEach(function(f){ cats[i].dep+=ironNum((dep.counts[f.label]||{})[t]); }); });
+  rb.forEach(function(r){ var i=idx(r.type); if(i<0||ironIsHead(r.type)) return; cats[i].shop+=r.paint+r.rebuild+r.machine+r.notStarted; });
+  av.forEach(function(r){ var i=idx(r.type); if(i<0||ironIsHead(r.type)) return; cats[i].avail+=r.avail; });
+  var max=Math.max(1,Math.max.apply(null,cats.map(function(c){return c.dep+c.shop+c.avail;})));
+  var rows=cats.map(function(c){
+    var tot=c.dep+c.shop+c.avail, w=tot?Math.max(2,tot/max*100):0;
+    var seg=function(v,op,lbl){ return v>0?'<span class="iron-seg" title="'+lbl+': '+v+'" style="width:'+(v/tot*100)+'%;background:'+c.color+';opacity:'+op+'"></span>':''; };
+    return '<div class="rank-row"><div class="rank-lbl"><span class="iron-dot" style="background:'+c.color+'"></span>'+esc(c.name)+'</div>'
+      +'<div class="rank-track">'+(w?'<div class="iron-bar-wrap" style="width:'+w+'%;height:100%">'+seg(c.dep,1,'Deployed')+seg(c.shop,.55,'In the shop')+seg(c.avail,.28,'Available')+'</div>':'')+'</div>'
+      +'<div class="rank-val">'+tot+' <span>'+c.dep+' / '+c.shop+' / '+c.avail+'</span></div></div>';
+  }).join('');
+  return '<div class="rank-card iron-cat-card"><div class="iron-tbl-title">By equipment category — deployed / in the shop / available</div>'
+    +'<div class="iron-legend"><span class="iron-leg"><span class="iron-dot" style="background:var(--text-secondary)"></span>Deployed</span><span class="iron-leg"><span class="iron-dot" style="background:var(--text-secondary);opacity:.55"></span>In the shop</span><span class="iron-leg"><span class="iron-dot" style="background:var(--text-secondary);opacity:.28"></span>Available</span></div>'
+    +rows+'</div>';
 }
 
 function stateLegend(states){
@@ -1607,6 +1639,7 @@ function renderIronOverview(){
     +'</div>';
   }).join('');
   var card='<div class="rank-card"><div class="iron-tbl-title">Asset status — ranked by count (of '+sum+' total)</div>'+bars+'</div>';
+  card+=ironCategoryCard();
   var rb=ironData.rebuild||[];
   function tbl(title,cols){
     var head=cols.map(function(c,i){ return '<th'+(i>0?' class="ic"':'')+'>'+c.h+'</th>'; }).join('');
