@@ -470,6 +470,15 @@
     .inv-count { font-size: 11px; color: var(--text-secondary); margin-left: auto; }
     .iron-heat-num { font-weight: 700; }
     .iron-total-col { font-weight: 800; background: var(--surface2); }
+    /* category grouping (mirrors the colour bands on the EWS Asset Tracking sheet) */
+    .inv-table tr.iron-grp td { background: color-mix(in srgb, var(--cat) 14%, var(--surface)); border-top: 2px solid var(--cat); padding: 6px 12px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--text); }
+    .inv-table tr.iron-grp td.iron-sticky { background: color-mix(in srgb, var(--cat) 14%, var(--surface)); }
+    .iron-grp-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--cat); margin-right: 8px; vertical-align: -1px; }
+    .iron-grp-sub { float: right; font-weight: 700; color: var(--text-secondary); text-transform: none; letter-spacing: 0; }
+    .inv-table tr.iron-row td:first-child { box-shadow: inset 4px 0 0 var(--cat); padding-left: 14px; }
+    .inv-table tr.iron-row.iron-head td:first-child { padding-left: 26px; color: var(--text-secondary); font-weight: 600; }
+    .inv-table tr.iron-row.iron-head td:first-child::before { content: '\21B3  '; }
+    .iron-foot-note { font-size: 11px; color: var(--text-secondary); margin-top: 6px; }
     .rank-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px 10px; box-shadow: var(--shadow); margin-bottom: 18px; }
     .rank-row { display: grid; grid-template-columns: 128px 1fr 96px; align-items: center; gap: 12px; padding: 7px 0; }
     .rank-lbl { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
@@ -831,6 +840,41 @@ var IRON_SHEET = CONFIG.ironId;
 var IRON_TABS = CONFIG.ironTabs;
 var IRON_COLORS = { Deployed:'#F4A62A', Complete:'#2E9E4F', Completed:'#2E9E4F', Paint:'#4A90D9', Rebuild:'#3949AB', Machine:'#00838F', 'Not Started':'#9AA0A6', Unstarted:'#9AA0A6' };
 var ironData = null;
+// Category bands – same order & items as the EWS Asset Tracking sheet (Deployed / Rebuild / Available)
+var IRON_CATS = [
+  { name:'Spools',         color:'#3d85c6', items:['16 Inch Spools','2 Foot Spools','3 Foot Spools','4 Foot Spools','6 Foot Spools','8 Foot Spools','10 Foot Spools','16 Foot Spools','20 Foot Spools'] },
+  { name:'Blocks',         color:'#8e7cc3', items:['3 Way Blocks','4 Way Blocks','5 Way Blocks','Swivel Blocks','Mini Blocks'] },
+  { name:'MLB & 45s',      color:'#45818e', items:['MLB','45°s'] },
+  { name:'Flanges',        color:'#e69138', items:['7 to 3 Inch Flanges','7 Inch Blind Flanges'] },
+  { name:'Densos',         color:'#c27ba0', items:['Densos'] },
+  { name:'Check Valves',   color:'#cc4125', items:['TSI 7 Inch Check Valves','TSI 7 Inch Check Valve Rebuild Kits','FMC 7 Inch Check Valves','FMC 7 Inch Check Valve Rebuild Kits','FET 7 Inch Check Valves','FET 7 Inch Check Valve Rebuild Kits'] },
+  { name:'Spare H4 Parts', color:'#8a8f98', items:['Spare H4 - 3 Inch Thread','Spare H4 - 3 Inch Check Valves','Spare H4 - 3 Inch 90°'] },
+  { name:'Skids',          color:'#6aa84f', items:['Extension Skids','Mini Extension Skids'] },
+  { name:'PODs & Heads',   color:'#a0785a', items:['Complete POD Assembly','H4','H3','Big Bore'] }
+];
+// Complete POD Assembly = H4 + H3 + Big Bore, so the heads are shown but never added into totals.
+var IRON_HEADS = ['h4','h3','big bore'];
+function ironKey(t){ return String(t||'').toLowerCase().replace(/rebild/g,'rebuild').replace(/\s+/g,' ').trim(); }
+function ironIsHead(t){ return IRON_HEADS.indexOf(ironKey(t))>=0; }
+var _ironCatIdx=null;
+function ironCatOf(t){
+  if(!_ironCatIdx){ _ironCatIdx={}; IRON_CATS.forEach(function(c,i){ c.items.forEach(function(it){ _ironCatIdx[ironKey(it)]=i; }); }); }
+  var i=_ironCatIdx[ironKey(t)]; return i==null ? { name:'Other', color:'#9aa0a6', order:99 } : { name:IRON_CATS[i].name, color:IRON_CATS[i].color, order:i };
+}
+// Split rows (already in sheet order) into category sections, keeping the sheet's order.
+function ironGroups(rows, typeOf){
+  var out=[], cur=null;
+  rows.forEach(function(r){
+    var c=ironCatOf(typeOf(r));
+    if(!cur || cur.name!==c.name){ cur={ name:c.name, color:c.color, rows:[] }; out.push(cur); }
+    cur.rows.push(r);
+  });
+  return out;
+}
+function ironGrpRow(g, colspan, sub){
+  return '<tr class="iron-grp" style="--cat:'+g.color+'"><td colspan="'+colspan+'"><span class="iron-grp-dot"></span>'+esc(g.name)+(sub!=null?'<span class="iron-grp-sub">'+sub+'</span>':'')+'</td></tr>';
+}
+function ironRowAttr(g, type){ return ' class="iron-row'+(ironIsHead(type)?' iron-head':'')+'" style="--cat:'+g.color+'"'; }
 var ironSub = (typeof localStorage!=='undefined' && localStorage.getItem('evo-iron-sub')) || 'deployed';
 var consumHeaders = null, consumRows = null, consumSnapshot = false, consumErr = '', consumFilter = '', consumNeedOnly = false;
 var fleetTries = 0;
@@ -1439,7 +1483,7 @@ function renderIron(){
     var deployed=tm['deployed']||0;
     var inProc=(tm['paint']||0)+(tm['rebuild']||0)+(tm['machine']||0)+(tm['unstarted']||0)+(tm['not started']||0);
     var complete=tm['completed']||tm['complete']||0;
-    var availSum=(ironData.available||[]).reduce(function(a,b){return a+b.avail;},0);
+    var availSum=(ironData.available||[]).reduce(function(a,b){return a+(ironIsHead(b.type)?0:b.avail);},0);
     var depPct=total?Math.round(deployed/total*100):0, procPct=total?Math.round(inProc/total*100):0;
     kpis=kpiStrip([
       { val: total, lbl:'Total Assets', sub:'tracked in EWS', tone:'primary' },
@@ -1449,7 +1493,7 @@ function renderIron(){
     ]);
     var dep=ironData.deployed||{fleets:[],types:[],counts:{}};
     var sumDep=0; (dep.types||[]).forEach(function(t){ (dep.fleets||[]).forEach(function(f){ sumDep+=ironNum((dep.counts[f.label]||{})[t]); }); });
-    var av=(ironData.available||[]).slice().sort(function(a,b){return b.avail-a.avail;}); var topAv=av[0];
+    var av=(ironData.available||[]).filter(function(r){return !ironIsHead(r.type);}).sort(function(a,b){return b.avail-a.avail;}); var topAv=av[0];
     if(ironSub==='processing') insight='<b>'+inProc+'</b> assets in the shop · <b>'+complete+'</b> complete &amp; ready to deploy';
     else if(ironSub==='available') insight='Most available: <b>'+(topAv?esc(topAv.type)+'</b> ('+topAv.avail+')':'&mdash;</b>')+' · <b>'+availSum+'</b> units on the shelf';
     else if(ironSub==='overview') insight='Deployed is <b>'+depPct+'%</b> of the <b>'+total+'</b>-asset fleet';
@@ -1481,21 +1525,26 @@ function renderIronDeployed(){
   var head='<th class="iron-sticky">Equipment</th>'+d.fleets.map(function(f){
     return '<th class="iron-fleet"><span class="iron-fleet-name">'+esc(f.label)+'</span><span class="iron-fleet-pad">'+(f.pad?esc(f.pad):'&mdash;')+'</span></th>';
   }).join('')+'<th class="ic">Total</th>';
-  var body=d.types.map(function(t){
-    var rowTotal=0;
-    var cells=d.fleets.map(function(f){
-      var v=(d.counts[f.label]||{})[t]; var n=ironNum(v); rowTotal+=n;
-      if(n<=0) return '<td class="iron-c"><span class="iron-zero">0</span></td>';
-      var a=0.12+0.80*(n/maxCell);
-      var tc=a>0.60?'color:#fff;':'';
-      return '<td class="iron-c" style="background:rgba(var(--heat-rgb),'+a.toFixed(3)+');'+tc+'"><span class="iron-heat-num">'+n+'</span></td>';
+  var cols=d.fleets.length+2;
+  var body=ironGroups(d.types,function(t){return t;}).map(function(g){
+    var gsum=0; g.rows.forEach(function(t){ if(ironIsHead(t)) return; d.fleets.forEach(function(f){ gsum+=ironNum((d.counts[f.label]||{})[t]); }); });
+    return ironGrpRow(g,cols,gsum+' deployed')+g.rows.map(function(t){
+      var rowTotal=0;
+      var cells=d.fleets.map(function(f){
+        var v=(d.counts[f.label]||{})[t]; var n=ironNum(v); rowTotal+=n;
+        if(n<=0) return '<td class="iron-c"><span class="iron-zero">0</span></td>';
+        var a=0.12+0.80*(n/maxCell);
+        var tc=a>0.60?'color:#fff;':'';
+        return '<td class="iron-c" style="background:rgba(var(--heat-rgb),'+a.toFixed(3)+');'+tc+'"><span class="iron-heat-num">'+n+'</span></td>';
+      }).join('');
+      return '<tr'+ironRowAttr(g,t)+'><td class="iron-sticky iron-type">'+esc(t)+'</td>'+cells+'<td class="ic iron-total-col">'+rowTotal+'</td></tr>';
     }).join('');
-    return '<tr><td class="iron-sticky iron-type">'+esc(t)+'</td>'+cells+'<td class="ic iron-total-col">'+rowTotal+'</td></tr>';
   }).join('');
   var grand=0;
-  var footCells=d.fleets.map(function(f){ var s=0; d.types.forEach(function(t){ s+=ironNum((d.counts[f.label]||{})[t]); }); grand+=s; return '<td class="ic iron-total-col">'+s+'</td>'; }).join('');
+  var footCells=d.fleets.map(function(f){ var s=0; d.types.forEach(function(t){ if(!ironIsHead(t)) s+=ironNum((d.counts[f.label]||{})[t]); }); grand+=s; return '<td class="ic iron-total-col">'+s+'</td>'; }).join('');
   var foot='<tr><td class="iron-sticky iron-total-col">All Equipment</td>'+footCells+'<td class="ic iron-total-col">'+grand+'</td></tr>';
-  return '<div class="inv-table-wrap"><table class="inv-table iron-matrix"><thead><tr>'+head+'</tr></thead><tbody>'+body+foot+'</tbody></table></div>';
+  return '<div class="inv-table-wrap"><table class="inv-table iron-matrix"><thead><tr>'+head+'</tr></thead><tbody>'+body+foot+'</tbody></table></div>'
+    +'<div class="iron-foot-note">&#8627; H4, H3 and Big Bore make up the Complete POD Assembly count, so they are listed but not added again in totals.</div>';
 }
 
 function ironStack(segs,total,maxTotal){
@@ -1508,24 +1557,31 @@ function ironStack(segs,total,maxTotal){
 }
 
 function renderIronProcessing(){
-  var rows=(ironData.rebuild||[]).slice().sort(function(a,b){return b.count-a.count;});
+  var rows=(ironData.rebuild||[]).slice();   // sheet order (same as Deployed)
   if(!rows.length) return '<div class="no-data"><p>No processing data.</p></div>';
   var maxCount=Math.max(1,Math.max.apply(null,rows.map(function(r){return r.count;})));
   var head='<th>Equipment</th><th class="ic">Count</th><th class="ic">Complete</th><th class="ic">Paint</th><th class="ic">Rebuild</th><th class="ic">Machine</th><th class="ic">Not Started</th><th>Distribution</th>';
-  var body=rows.map(function(r){
-    var segs=[{name:'Complete',v:r.complete,color:IRON_COLORS.Complete},{name:'Paint',v:r.paint,color:IRON_COLORS.Paint},{name:'Rebuild',v:r.rebuild,color:IRON_COLORS.Rebuild},{name:'Machine',v:r.machine,color:IRON_COLORS.Machine},{name:'Not Started',v:r.notStarted,color:IRON_COLORS['Not Started']}];
-    return '<tr><td>'+esc(r.type)+'</td><td class="ic" style="font-weight:800">'+r.count+'</td><td class="ic">'+r.complete+'</td><td class="ic">'+r.paint+'</td><td class="ic">'+r.rebuild+'</td><td class="ic">'+r.machine+'</td><td class="ic">'+r.notStarted+'</td><td class="iron-barcell">'+ironStack(segs,r.count,maxCount)+'</td></tr>';
+  var body=ironGroups(rows,function(r){return r.type;}).map(function(g){
+    var inShop=0, cnt=0; g.rows.forEach(function(r){ if(ironIsHead(r.type)) return; cnt+=r.count; inShop+=r.paint+r.rebuild+r.machine+r.notStarted; });
+    return ironGrpRow(g,8,cnt+' total · '+inShop+' in the shop')+g.rows.map(function(r){
+      var segs=[{name:'Complete',v:r.complete,color:IRON_COLORS.Complete},{name:'Paint',v:r.paint,color:IRON_COLORS.Paint},{name:'Rebuild',v:r.rebuild,color:IRON_COLORS.Rebuild},{name:'Machine',v:r.machine,color:IRON_COLORS.Machine},{name:'Not Started',v:r.notStarted,color:IRON_COLORS['Not Started']}];
+      return '<tr'+ironRowAttr(g,r.type)+'><td>'+esc(r.type)+'</td><td class="ic" style="font-weight:800">'+r.count+'</td><td class="ic">'+r.complete+'</td><td class="ic">'+r.paint+'</td><td class="ic">'+r.rebuild+'</td><td class="ic">'+r.machine+'</td><td class="ic">'+r.notStarted+'</td><td class="iron-barcell">'+ironStack(segs,r.count,maxCount)+'</td></tr>';
+    }).join('');
   }).join('');
-  return stateLegend(['Complete','Paint','Rebuild','Machine','Not Started'])+'<div class="inv-table-wrap"><table class="inv-table"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>';
+  return stateLegend(['Complete','Paint','Rebuild','Machine','Not Started'])+'<div class="inv-table-wrap"><table class="inv-table"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>'
+    +'<div class="iron-foot-note">&#8627; H4, H3 and Big Bore roll up into Complete POD Assembly; their stage progress is tracked on the POD row.</div>';
 }
 
 function renderIronAvailable(){
-  var rows=(ironData.available||[]).slice().sort(function(a,b){return b.avail-a.avail;});
+  var rows=(ironData.available||[]).slice();  // sheet order (same as Deployed)
   if(!rows.length) return '<div class="no-data"><p>No available data.</p></div>';
   var maxV=Math.max(1,Math.max.apply(null,rows.map(function(r){return r.avail;})));
-  var body=rows.map(function(r){
-    var w=r.avail>0?Math.max(3,Math.round(r.avail/maxV*100)):0;
-    return '<tr><td>'+esc(r.type)+'</td><td class="ic" style="font-weight:800">'+r.avail+'</td><td class="iron-barcell"><div class="iron-bar-wrap" style="width:'+w+'%"><span class="iron-seg" style="width:100%;background:var(--primary)"></span></div></td></tr>';
+  var body=ironGroups(rows,function(r){return r.type;}).map(function(g){
+    var sum=0; g.rows.forEach(function(r){ if(!ironIsHead(r.type)) sum+=r.avail; });
+    return ironGrpRow(g,3,sum+' on the shelf')+g.rows.map(function(r){
+      var w=r.avail>0?Math.max(3,Math.round(r.avail/maxV*100)):0;
+      return '<tr'+ironRowAttr(g,r.type)+'><td>'+esc(r.type)+'</td><td class="ic" style="font-weight:800">'+(r.avail>0?r.avail:'<span class="iron-zero">0</span>')+'</td><td class="iron-barcell">'+(w?'<div class="iron-bar-wrap" style="width:'+w+'%"><span class="iron-seg" style="width:100%;background:'+g.color+'"></span></div>':'')+'</td></tr>';
+    }).join('');
   }).join('');
   return '<div class="inv-table-wrap"><table class="inv-table"><thead><tr><th>Equipment</th><th class="ic">Available</th><th>&nbsp;</th></tr></thead><tbody>'+body+'</tbody></table></div>';
 }
@@ -1554,7 +1610,7 @@ function renderIronOverview(){
   var rb=ironData.rebuild||[];
   function tbl(title,cols){
     var head=cols.map(function(c,i){ return '<th'+(i>0?' class="ic"':'')+'>'+c.h+'</th>'; }).join('');
-    var b=rb.map(function(row){ return '<tr>'+cols.map(function(c,i){ return i===0?'<td>'+esc(row.type)+'</td>':'<td class="ic">'+(row[c.k]||0)+'</td>'; }).join('')+'</tr>'; }).join('');
+    var b=ironGroups(rb,function(r){return r.type;}).map(function(g){ return ironGrpRow(g,cols.length)+g.rows.map(function(row){ return '<tr'+ironRowAttr(g,row.type)+'>'+cols.map(function(c,i){ return i===0?'<td>'+esc(row.type)+'</td>':'<td class="ic">'+(row[c.k]||0)+'</td>'; }).join('')+'</tr>'; }).join(''); }).join('');
     return '<div class="iron-tbl-card"><div class="iron-tbl-title">'+title+'</div><div class="inv-table-wrap"><table class="inv-table"><thead><tr>'+head+'</tr></thead><tbody>'+b+'</tbody></table></div></div>';
   }
   var tAll=tbl('Count & rebuild stages by equipment',[{h:'Equipment',k:'type'},{h:'Count',k:'count'},{h:'Complete',k:'complete'},{h:'Paint',k:'paint'},{h:'Rebuild',k:'rebuild'},{h:'Machine',k:'machine'},{h:'Not Started',k:'notStarted'}]);
