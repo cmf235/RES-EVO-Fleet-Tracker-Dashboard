@@ -478,6 +478,14 @@
     .inv-table tr.iron-row td:first-child { box-shadow: inset 4px 0 0 var(--cat); padding-left: 14px; }
     .inv-table tr.iron-row.iron-head td:first-child { padding-left: 26px; color: var(--text-secondary); font-weight: 600; }
     .inv-table tr.iron-row.iron-head td:first-child::before { content: '\21B3  '; }
+    /* POD styles (H4 / H3 / Big Bore): italic + lighter so they read as the parts of Complete POD Assembly */
+    .inv-table tr.iron-row.iron-head td { font-style: italic; }
+    .inv-table tr.iron-row.iron-head td.ic, .inv-table tr.iron-row.iron-head .iron-heat-num { font-weight: 500; }
+    /* Complete POD Assembly = total of the 3 POD styles: low-profile dashed box around its number cells */
+    .inv-table tr.iron-row.iron-podtot td:not(:first-child) { border-top: 2px dashed color-mix(in srgb, var(--cat) 65%, transparent); border-bottom: 2px dashed color-mix(in srgb, var(--cat) 65%, transparent); }
+    .inv-table tr.iron-row.iron-podtot td:nth-child(2) { border-left: 2px dashed color-mix(in srgb, var(--cat) 65%, transparent); }
+    .inv-table tr.iron-row.iron-podtot td:last-child { border-right: 2px dashed color-mix(in srgb, var(--cat) 65%, transparent); }
+    .iron-pod-note { display: block; font-size: 10.5px; font-weight: 600; font-style: normal; color: var(--text-secondary); margin-top: 2px; white-space: normal; letter-spacing: 0; text-transform: none; }
     .iron-foot-note { font-size: 11px; color: var(--text-secondary); margin-top: 6px; }
     .rank-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px 10px; box-shadow: var(--shadow); margin-bottom: 18px; }
     .rank-row { display: grid; grid-template-columns: 128px 1fr 96px; align-items: center; gap: 12px; padding: 7px 0; }
@@ -885,7 +893,10 @@ function ironGroups(rows, typeOf){
 function ironGrpRow(g, colspan, sub){
   return '<tr class="iron-grp" style="--cat:'+g.color+'"><td colspan="'+colspan+'"><span class="iron-grp-dot"></span>'+esc(g.name)+(sub!=null?'<span class="iron-grp-sub">'+sub+'</span>':'')+'</td></tr>';
 }
-function ironRowAttr(g, type){ return ' class="iron-row'+(ironIsHead(type)?' iron-head':'')+'" style="--cat:'+g.color+'"'; }
+function ironIsPodTotal(t){ return ironKey(t)==='complete pod assembly'; }
+function ironRowAttr(g, type){ return ' class="iron-row'+(ironIsHead(type)?' iron-head':'')+(ironIsPodTotal(type)?' iron-podtot':'')+'" style="--cat:'+g.color+'"'; }
+// Equipment-name cell text; the Complete POD Assembly row gets a note that it is a roll-up, not extra PODs.
+function ironTypeLabel(t){ return esc(t)+(ironIsPodTotal(t)?'<span class="iron-pod-note">&Sigma; Total of H4 + H3 + Big Bore below &middot; not additional PODs</span>':''); }
 var ironSub = (typeof localStorage!=='undefined' && localStorage.getItem('evo-iron-sub')) || 'deployed';
 var consumHeaders = null, consumRows = null, consumSnapshot = false, consumErr = '', consumFilter = '', consumNeedOnly = false;
 var fleetTries = 0;
@@ -1549,14 +1560,14 @@ function renderIronDeployed(){
         var tc=a>0.60?'color:#fff;':'';
         return '<td class="iron-c" style="background:rgba(var(--heat-rgb),'+a.toFixed(3)+');'+tc+'"><span class="iron-heat-num">'+n+'</span></td>';
       }).join('');
-      return '<tr'+ironRowAttr(g,t)+'><td class="iron-sticky iron-type">'+esc(t)+'</td>'+cells+'<td class="ic iron-total-col">'+rowTotal+'</td></tr>';
+      return '<tr'+ironRowAttr(g,t)+'><td class="iron-sticky iron-type">'+ironTypeLabel(t)+'</td>'+cells+'<td class="ic iron-total-col">'+rowTotal+'</td></tr>';
     }).join('');
   }).join('');
   var grand=0;
   var footCells=d.fleets.map(function(f){ var s=0; d.types.forEach(function(t){ if(!ironIsHead(t)) s+=ironNum((d.counts[f.label]||{})[t]); }); grand+=s; return '<td class="ic iron-total-col">'+s+'</td>'; }).join('');
   var foot='<tr><td class="iron-sticky iron-total-col">All Equipment</td>'+footCells+'<td class="ic iron-total-col">'+grand+'</td></tr>';
   return '<div class="inv-table-wrap"><table class="inv-table iron-matrix"><thead><tr>'+head+'</tr></thead><tbody>'+body+foot+'</tbody></table></div>'
-    +'<div class="iron-foot-note">&#8627; H4, H3 and Big Bore make up the Complete POD Assembly count, so they are listed but not added again in totals.</div>';
+    +'<div class="iron-foot-note">&#8627; <i>H4, H3 and Big Bore</i> are the three POD styles; the boxed Complete POD Assembly row is their total, so they are listed but not added again in totals.</div>';
 }
 
 function ironStack(segs,total,maxTotal){
@@ -1577,11 +1588,11 @@ function renderIronProcessing(){
     var inShop=0, cnt=0; g.rows.forEach(function(r){ if(ironIsHead(r.type)) return; cnt+=r.count; inShop+=r.paint+r.rebuild+r.machine+r.notStarted; });
     return ironGrpRow(g,8,cnt+' total · '+inShop+' in the shop')+g.rows.map(function(r){
       var segs=[{name:'Complete',v:r.complete,color:IRON_COLORS.Complete},{name:'Paint',v:r.paint,color:IRON_COLORS.Paint},{name:'Rebuild',v:r.rebuild,color:IRON_COLORS.Rebuild},{name:'Machine',v:r.machine,color:IRON_COLORS.Machine},{name:'Not Started',v:r.notStarted,color:IRON_COLORS['Not Started']}];
-      return '<tr'+ironRowAttr(g,r.type)+'><td>'+esc(r.type)+'</td><td class="ic" style="font-weight:800">'+r.count+'</td><td class="ic">'+r.complete+'</td><td class="ic">'+r.paint+'</td><td class="ic">'+r.rebuild+'</td><td class="ic">'+r.machine+'</td><td class="ic">'+r.notStarted+'</td><td class="iron-barcell">'+ironStack(segs,r.count,maxCount)+'</td></tr>';
+      return '<tr'+ironRowAttr(g,r.type)+'><td>'+ironTypeLabel(r.type)+'</td><td class="ic" style="font-weight:800">'+r.count+'</td><td class="ic">'+r.complete+'</td><td class="ic">'+r.paint+'</td><td class="ic">'+r.rebuild+'</td><td class="ic">'+r.machine+'</td><td class="ic">'+r.notStarted+'</td><td class="iron-barcell">'+ironStack(segs,r.count,maxCount)+'</td></tr>';
     }).join('');
   }).join('');
   return stateLegend(['Complete','Paint','Rebuild','Machine','Not Started'])+'<div class="inv-table-wrap"><table class="inv-table"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>'
-    +'<div class="iron-foot-note">&#8627; H4, H3 and Big Bore roll up into Complete POD Assembly, so they are shown but not added again in the category totals.</div>';
+    +'<div class="iron-foot-note">&#8627; <i>H4, H3 and Big Bore</i> are the three POD styles; the boxed Complete POD Assembly row is their total, so they are shown but not added again in the category totals.</div>';
 }
 
 function renderIronAvailable(){
@@ -1592,10 +1603,11 @@ function renderIronAvailable(){
     var sum=0; g.rows.forEach(function(r){ if(!ironIsHead(r.type)) sum+=r.avail; });
     return ironGrpRow(g,3,sum+' on the shelf')+g.rows.map(function(r){
       var w=r.avail>0?Math.max(3,Math.round(r.avail/maxV*100)):0;
-      return '<tr'+ironRowAttr(g,r.type)+'><td>'+esc(r.type)+'</td><td class="ic" style="font-weight:800">'+(r.avail>0?r.avail:'<span class="iron-zero">0</span>')+'</td><td class="iron-barcell">'+(w?'<div class="iron-bar-wrap" style="width:'+w+'%"><span class="iron-seg" style="width:100%;background:'+g.color+'"></span></div>':'')+'</td></tr>';
+      return '<tr'+ironRowAttr(g,r.type)+'><td>'+ironTypeLabel(r.type)+'</td><td class="ic" style="font-weight:800">'+(r.avail>0?r.avail:'<span class="iron-zero">0</span>')+'</td><td class="iron-barcell">'+(w?'<div class="iron-bar-wrap" style="width:'+w+'%"><span class="iron-seg" style="width:100%;background:'+g.color+'"></span></div>':'')+'</td></tr>';
     }).join('');
   }).join('');
-  return '<div class="inv-table-wrap"><table class="inv-table"><thead><tr><th>Equipment</th><th class="ic">Available</th><th>&nbsp;</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+  return '<div class="inv-table-wrap"><table class="inv-table"><thead><tr><th>Equipment</th><th class="ic">Available</th><th>&nbsp;</th></tr></thead><tbody>'+body+'</tbody></table></div>'
+    +'<div class="iron-foot-note">&#8627; <i>H4, H3 and Big Bore</i> are the three POD styles; the boxed Complete POD Assembly row is their total, so they are not added again in the category totals.</div>';
 }
 
 // Overview: one colour-grouped bar per equipment category (Deployed / In the shop / Available)
