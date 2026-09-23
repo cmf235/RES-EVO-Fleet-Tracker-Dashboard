@@ -1236,7 +1236,7 @@ function ironNum(x){ var n=parseFloat(String(x==null?'':x).replace(/[^0-9.\-]/g,
 
 // ============================================================
 //  UNSIGNED INVOICES  (from the RES-EVO Billing Platform)
-//  Live feed: CONFIG.billingExecUrl?action=summary -> {rows:[...]}
+//  Live feed: CONFIG.billingExecUrl?action=pending -> {rows:[...]}  (unsigned current-year invoices only)
 //  "Unsigned" mirrors the billing platform's Needs-Attention rule:
 //  needsSig = NOT paid AND NOT signed.  Each invoice maps to a fleet
 //  via its `fleet` field (fallback: parse "Fleet # N" from notes).
@@ -1253,7 +1253,7 @@ function normalizeInvoice_(r){
 function invInCurrentYear_(x){ var d=parseDate(x.date); return !!d && d.getFullYear()===new Date().getFullYear(); }
 function loadBilling(){
   if(!CONFIG.billingExecUrl) return;
-  fetchT(CONFIG.billingExecUrl+'?action=summary', CONFIG.timeouts.billing)
+  fetchT(CONFIG.billingExecUrl+'?action=pending', CONFIG.timeouts.billing)   // small pre-filtered feed (older backends answer with the full summary — same shape)
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
     .then(function(j){
       var rows=(j&&j.rows)?j.rows:[];
