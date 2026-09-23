@@ -1296,10 +1296,11 @@ function renderPending(){
       : '<div class="no-data"><div class="no-data-icon">⏳</div><p>Loading pending invoices…</p></div>';
     return;
   }
-  var list=billingUnsigned.slice();
+  // Only show invoices that have been assigned an invoice # (2026-09-22)
+  var list=billingUnsigned.filter(function(x){ return String(x.inv||'').trim()!==''; });
   var grand=list.reduce(function(a,x){return a+(Number(x.amount)||0);},0);
   var head='<div class="uinv-page-head"><div><div class="uinv-page-title">✍️ Pending Invoices</div>'
-    + '<div class="uinv-page-sub">Unsigned invoices — unpaid &amp; not yet signed — from the Billing Platform, current year</div></div>'
+    + '<div class="uinv-page-sub">Unsigned invoices with an assigned invoice # — unpaid &amp; not yet signed — from the Billing Platform, current year</div></div>'
     + '<div class="uinv-page-kpi"><span class="uinv-page-num">'+list.length+'</span><span class="uinv-page-lbl">unsigned · '+invMoney0_(grand)+'</span></div></div>';
   if(!list.length){
     el.innerHTML = head + '<div class="uinv-empty">🎉 No unsigned invoices this year — all caught up.</div>';
