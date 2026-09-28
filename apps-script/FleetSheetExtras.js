@@ -17,11 +17,37 @@
    No existing code is modified — this only ADDS functions.
    ============================================================================ */
 
+/* ---- Write protection (2026-09-27) ----------------------------------------------------------------------
+   The dashboard is public (crews view it from WhatsApp links), so READS stay open, but every WRITE must carry a
+   Google ID token for a verified @revolution-es.com account. The page gets it from "Sign in with Google" when
+   someone clicks Save. We check it with Google (right app, right domain, not expired) before touching the sheet.
+   Emergency bypass without a redeploy: Run ▸ fleetAuthOff (Run ▸ fleetAuthOn to restore). */
+var FLEET_AUTH_CLIENT_ID='356147624842-1m9p45pem87hcea3tcfb1e7t5gn8e2d8.apps.googleusercontent.com';
+var FLEET_AUTH_DOMAIN='revolution-es.com';
+function fleetAuthOn(){ PropertiesService.getScriptProperties().deleteProperty('FLEET_AUTH_BYPASS'); return 'fleet writes require sign-in'; }
+function fleetAuthOff(){ PropertiesService.getScriptProperties().setProperty('FLEET_AUTH_BYPASS','yes'); return 'fleet writes OPEN (bypass) — run fleetAuthOn to restore'; }
+/* Run once from the editor after deploying: grants the "connect to an external service" permission the check needs. */
+function fleetAuthCheck(){ var r=UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?id_token=x',{muteHttpExceptions:true}); return 'permission OK (Google answered '+r.getResponseCode()+')'; }
+function fleetWriter_(idt){
+  if(PropertiesService.getScriptProperties().getProperty('FLEET_AUTH_BYPASS')==='yes') return {email:'(bypass)'};
+  if(!idt) return null;
+  var r=UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?id_token='+encodeURIComponent(idt),{muteHttpExceptions:true});
+  if(r.getResponseCode()!==200) return null;
+  var t=JSON.parse(r.getContentText()), email=String(t.email||'').toLowerCase();
+  if(t.aud!==FLEET_AUTH_CLIENT_ID) return null;
+  if(t.iss!=='accounts.google.com' && t.iss!=='https://accounts.google.com') return null;
+  if(String(t.email_verified)!=='true' || !email.endsWith('@'+FLEET_AUTH_DOMAIN)) return null;
+  if(!(Number(t.exp)*1000>Date.now())) return null;
+  return {email:email};
+}
+
 function doPost(e){
   var out={ok:false};
   try{
     var body=JSON.parse((e&&e.postData&&e.postData.contents)||'{}');
-    if(body.action==='saveFleetPanel'){ out=saveFleetPanel_(body); }
+    var who=fleetWriter_(body.idToken);
+    if(!who) out={ok:false, auth:'required', error:'Sign in with your @'+FLEET_AUTH_DOMAIN+' Google account to save.'};
+    else if(body.action==='saveFleetPanel'){ out=saveFleetPanel_(body); console.log('saveFleetPanel by '+who.email+' fleet '+body.fleet+' '+body.side); }
     else { out={ok:false,error:'unknown action'}; }
   }catch(err){ out={ok:false,error:String(err)}; }
   return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
