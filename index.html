@@ -1401,6 +1401,45 @@ function _mergeEdit_(t,d){
   t.roustabout={ start:d.roustabout.start, startTime:to12h_(d.roustabout.startTime), end:d.roustabout.end, dayShift:d.roustabout.dayShift, dayQty:d.roustabout.dayQty, nightShift:d.roustabout.nightShift, nightQty:d.roustabout.nightQty };
   t.misc={ start:d.misc.start, startTime:to12h_(d.misc.startTime), end:d.misc.end, desc:d.misc.desc };
 }
+/* ---- Sign-in for edits (2026-09-27) ----------------------------------------------------------------
+   Viewing stays open. Saving needs a Google ID token for an @revolution-es.com account; the feed checks it
+   with Google before writing. The token lives in this tab only (sessionStorage) and lasts about an hour. */
+var FLEET_GSI_CLIENT='356147624842-1m9p45pem87hcea3tcfb1e7t5gn8e2d8.apps.googleusercontent.com';
+var _fleetIdt=null; try{ var _o=JSON.parse(sessionStorage.getItem('evo-idt')||'null'); if(_o&&_o.exp>Date.now()+60000) _fleetIdt=_o; }catch(e){}
+function _jwtPayload_(t){ var b=t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'); return JSON.parse(decodeURIComponent(atob(b).split('').map(function(c){return '%'+('00'+c.charCodeAt(0).toString(16)).slice(-2);}).join(''))); }
+function _loadGsi_(){ return new Promise(function(res,rej){ if(window.google&&google.accounts&&google.accounts.id) return res();
+  var s=document.createElement('script'); s.src='https://accounts.google.com/gsi/client'; s.async=true;
+  s.onload=function(){res();}; s.onerror=function(){rej(new Error('Google sign-in could not load — check your connection.'));}; document.head.appendChild(s); }); }
+function getEditToken_(){
+  if(_fleetIdt && _fleetIdt.exp>Date.now()+60000) return Promise.resolve(_fleetIdt.t);
+  return _loadGsi_().then(function(){ return new Promise(function(res,rej){
+    var box=document.getElementById('gsiEditBox');
+    if(!box){ box=document.createElement('div'); box.id='gsiEditBox';
+      box.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:100000';
+      box.innerHTML='<div style="background:#fff;color:#1f2933;padding:22px 24px;border-radius:12px;max-width:340px;text-align:center;font:14px/1.45 system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.3)">'
+        +'<div style="font-weight:700;font-size:16px;margin-bottom:6px">Sign in to save</div>'
+        +'<div style="opacity:.8;margin-bottom:14px">Changes to the fleet sheet need your @revolution-es.com Google account.</div>'
+        +'<div id="gsiEditBtn" style="display:flex;justify-content:center"></div><div id="gsiEditErr" style="color:#c62828;margin-top:10px;min-height:1em"></div>'
+        +'<button id="gsiEditCancel" style="margin-top:6px;background:none;border:0;color:#1f2933;opacity:.7;cursor:pointer;text-decoration:underline">Cancel</button></div>';
+      document.body.appendChild(box); }
+    box.style.display='flex'; document.getElementById('gsiEditErr').textContent='';
+    var done=false; function finish(err,tok){ if(done) return; done=true; box.style.display='none'; if(err) rej(err); else res(tok); }
+    document.getElementById('gsiEditCancel').onclick=function(){ finish(new Error('cancelled')); };
+    google.accounts.id.initialize({client_id:FLEET_GSI_CLIENT, hd:'revolution-es.com', auto_select:true, callback:function(r){
+      try{ var p=_jwtPayload_(r.credential);
+        if(!String(p.email||'').toLowerCase().endsWith('@revolution-es.com')){ document.getElementById('gsiEditErr').textContent='Use your @revolution-es.com account.'; return; }
+        _fleetIdt={t:r.credential,exp:p.exp*1000}; try{ sessionStorage.setItem('evo-idt',JSON.stringify(_fleetIdt)); }catch(e){}
+        finish(null,r.credential);
+      }catch(e){ document.getElementById('gsiEditErr').textContent='Sign-in failed, try again.'; } }});
+    var btn=document.getElementById('gsiEditBtn'); btn.innerHTML='';
+    google.accounts.id.renderButton(btn,{theme:'filled_blue',size:'large',text:'signin_with'});
+  }); });
+}
+function fleetSave_(payload){
+  return getEditToken_().then(function(tok){
+    return fetch(CONFIG.apiUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({},payload,{idToken:tok}))}).then(function(r){return r.json();});
+  }).then(function(res){ if(res&&res.auth){ _fleetIdt=null; try{ sessionStorage.removeItem('evo-idt'); }catch(e){} } return res; });
+}
 function saveEditModal(){
   if(!_editCtx) return;
   var num=_editCtx.num, side=_editCtx.side;
@@ -1417,8 +1456,7 @@ function saveEditModal(){
     roustabout:{ start:v('ed_ro_start'), startTime:v('ed_ro_startTime'), end:v('ed_ro_end'), dayShift:c('ed_ro_dayShift'), dayQty:n('ed_ro_dayQty'), nightShift:c('ed_ro_nightShift'), nightQty:n('ed_ro_nightQty') },
     misc:{ start:v('ed_mc_start'), startTime:v('ed_mc_startTime'), end:v('ed_mc_end'), desc:v('ed_mc_desc') } };
   var btn=document.getElementById('ed_saveBtn'); if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
-  fetch(CONFIG.apiUrl,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'saveFleetPanel',fleet:num,side:side,data:data})})
-    .then(function(r){return r.json();})
+  fleetSave_({action:'saveFleetPanel',fleet:num,side:side,data:data})
     .then(function(res){
       if(res&&res.ok){
         var f=_fleetByNum_(num);
@@ -1430,7 +1468,8 @@ function saveEditModal(){
         emToast_('Save failed: '+((res&&res.error)||'unknown'),true);
       }
     })
-    .catch(function(err){ if(btn){ btn.disabled=false; btn.textContent='Save changes'; } emToast_('Save failed — could not reach the sheet.',true); });
+    .catch(function(err){ if(btn){ btn.disabled=false; btn.textContent='Save changes'; } if(err&&err.message==='cancelled') return;
+      emToast_(err&&/sign-in/i.test(err.message)?err.message:'No clean reply from the sheet — refreshing to check whether it saved.',true); try{ loadFleets(); }catch(e){} });
 }
 function loadIron(){
   if(!document.getElementById('panel-iron')) return;
