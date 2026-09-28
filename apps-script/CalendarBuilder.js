@@ -604,17 +604,6 @@ function diagnoseMergedCells() {
 // Deploy as: Execute as Me / Anyone can access
 // ============================================================
 function doGet(e) {
-  // Debug: return raw row5 values
-  if (e && e.parameter && e.parameter.debug === 'row5') {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sh = ss.getSheets().find(function(s){ return s.getName().indexOf('Lindsay Riley') >= 0; });
-    var row5 = {};
-    ['J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ'].forEach(function(col){
-      row5[col+'5'] = sh.getRange(col+'5').getValue();
-    });
-    return ContentService.createTextOutput(JSON.stringify(row5)).setMimeType(ContentService.MimeType.JSON);
-  }
-
   try {
     var _cache = CacheService.getScriptCache();
     var _bypass = e && e.parameter && (e.parameter.fresh === '1' || e.parameter.nocache === '1');
